@@ -112,6 +112,11 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 .photo .badge{position:absolute;top:6px;right:6px;font-size:10px;font-weight:800;padding:3px 9px 3px 7px;border-radius:20px;color:#fff;display:inline-flex;align-items:center;gap:4px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .photo .badge::before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;opacity:.95}
 .badge.pend{background:#d9920c}
+/* จุดที่ถูกสุ่มให้ถ่ายรูป (top-left) */
+.photo .pick{position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;color:#fff;background:#2563c9;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.card.picked{border-color:#2563c9;border-width:2px}
+.cathead .cn-pick{color:#fff;background:#2563c9}
+.cathead .cn-pick.full{background:var(--pass)}
 .badge.pass{background:var(--pass)}
 .badge.fail{background:var(--fail)}
 .cap{padding:9px 10px 10px}
@@ -314,6 +319,10 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
     </div>
     <div class="row"><button class="opt on" id="opt-autonext"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>เลื่อนไปจุดถัดไปอัตโนมัติ (Auto Next)</button></div>
     <div class="row"><button class="opt" id="opt-onlyphoto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="10" r="1.5" fill="currentColor"/><path d="M21 16l-5-5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>เลือกออกเฉพาะจุดที่มีรูป</button></div>
+    <div class="row">
+      <button class="opt" id="opt-sample"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/><circle cx="16" cy="16" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg><span id="sample-label">สุ่มจุดถ่ายรูป (หมวดละ 3–5 จุด)</span></button>
+      <button class="opt" id="opt-samplefilter" hidden>ดูเฉพาะจุดที่สุ่ม</button>
+    </div>
     <div class="row"><button class="opt" id="opt-collapse"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 4h13M8 10h13M8 16h13M3 4l2 2-2 2M3 14l2 2-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>ยุบ / ขยายทุกหมวด</button></div>
     <div class="row"><button class="opt" id="opt-tpl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h10M4 12h7M4 18h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 11v8m-4-4h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>แก้ไขรายการตรวจ (เพิ่ม/ลบ หมวดและจุด)</button></div>
     <div class="row">
@@ -463,6 +472,10 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
           ไฟล์ยังอยู่ ไม่ต้องสร้างใหม่ แต่ถ้าเผลอปิดแผงไปแล้วต้องกดสร้างใหม่</div>
         <p style="margin-top:9px">ตัวเลือก <b>"เลือกออกเฉพาะจุดที่มีรูป"</b> ในเมนู <span class="k">⋯</span>
           จะตัดจุดที่ยังไม่มีรูปออกจากรายงาน เหมาะกับการส่งรายงานระหว่างทาง</p>
+        <p style="margin-top:9px"><b>ถ่ายรูปแค่บางจุด</b> — เมนู <span class="k">⋯</span> → <b>"สุ่มจุดถ่ายรูป"</b>
+          แอปจะสุ่มหมวดละ 3–5 จุด (หมวดที่มีจุดน้อยกว่านั้นเอาทุกจุด) ติดป้ายสีฟ้า <b>📷 สุ่ม</b> ไว้
+          หัวหมวดบอกว่าถ่ายไปแล้วกี่รูป เช่น <code>📷 2/4</code> และเปิด "เฉพาะจุดที่มีรูป" ให้อัตโนมัติ
+          ผลปกติ/ไม่ปกติยังกดได้ทุกจุดเหมือนเดิม — ตารางสรุปนับครบทุกจุด กด "ล้างข้อมูลทั้งหมด" ตอนขึ้นรอบใหม่แล้วสุ่มใหม่</p>
       </div>
     </details>
 
@@ -683,7 +696,10 @@ const photoBlob={};     // uid -> Blob — โหมด fallback (ไม่ม�
 const photoURL={};      // uid -> object URL ที่ยังมีชีวิต (จำกัดจำนวนด้วย LRU)
 let orphanPhotoKeys=[]; // stable id ของรูปใน IDB ที่ template ไม่รู้จักแล้ว
 let onlyPhotoExport=false;
-let activeFilter='all'; // all | pending | pass | fail
+let activeFilter='all'; // all | pending | pass | fail | sample
+// จุดที่ถูกสุ่มให้ถ่ายรูป — เก็บเป็น stable id (ไม่ใช่ uid) จึงไม่เพี้ยนเมื่อแก้/สลับรายการตรวจ
+const SAMPLE_MIN=3, SAMPLE_MAX=5;
+const samplePick=new Set();
 let autoNext=true;      // jump to next point after marking result
 const collapsedCats=new Set();  // cid ของหมวดที่ถูกยุบ — ใช้ cid ไม่ใช้ดัชนี เพราะดัชนีเลื่อนได้เมื่อสลับ/ลบหมวด
 let metaPersistOK=true, photoPersistOK=true, persisted=false;
@@ -848,8 +864,8 @@ function saveMeta(){
 let _metaT=null;
 function saveMetaSoon(){clearTimeout(_metaT);_metaT=setTimeout(function(){_metaT=null;saveMeta();},400);}
 function flushMeta(){if(_metaT){clearTimeout(_metaT);_metaT=null;saveMeta();}}
-function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats]}));}
-function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});}catch(e){}}
+function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats],sample:[...samplePick]}));}
+function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});if(Array.isArray(s.sample))s.sample.forEach(function(i){if(typeof i==='string')samplePick.add(i);});}catch(e){}}
 
 // ---- photo ops ----
 // รูปทั้งชุดคือ ~40–80MB จึงถือ object URL ไว้แค่ไม่กี่ใบ แล้วโหลดที่เหลือจาก IDB เมื่อเลื่อนถึง
@@ -1025,12 +1041,16 @@ function catHeadHTML(si){
   cat.points.forEach((p,pi)=>{const st=meta[uid(si,pi)]||{};if(st.result==='pass')cOk++;else if(st.result==='fail')cBad++;});
   const okPill=cOk>0?('<span class="cn cn-ok">ปกติ '+cOk+'</span>'):'';
   const badPill=cBad>0?('<span class="cn cn-bad">ไม่ปกติ '+cBad+'</span>'):'';
-  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
+  let nPick=0,nShot=0;
+  cat.points.forEach((p,pi)=>{const id=uid(si,pi);if(isPicked(id)){nPick++;if(photoKeys.has(id))nShot++;}});
+  const pickPill=nPick>0?('<span class="cn cn-pick'+(nShot>=nPick?' full':'')+'">📷 '+nShot+'/'+nPick+'</span>'):'';
+  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+pickPill+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
 }
 function cardHTML(si,pi){
   const id=uid(si,pi);const p=TPL[si].points[pi];const st=meta[id]||{};
   const hasPhoto=photoKeys.has(id);
-  const cls='card'+(st.result==='fail'?' issue':(hasPhoto&&st.result?' done':''));
+  const picked=isPicked(id);
+  const cls='card'+(st.result==='fail'?' issue':(hasPhoto&&st.result?' done':(picked?' picked':'')));
   const ordTxt=p.order?('<span class="ord">'+esc(p.order)+'. </span>'):'';
   const codeTxt=p.code?esc(p.code):'(ไม่มีรหัส)';
   const bCls=st.result==='pass'?'pass':(st.result==='fail'?'fail':'pend');
@@ -1041,8 +1061,8 @@ function cardHTML(si,pi){
         esc((hasPhoto?'ดูรูปของ ':'เลือกรูปให้ ')+(p.code||'')+' '+(p.location||''))+'" '+
         'data-act="'+(hasPhoto?'view':'gallery')+'" data-id="'+id+'">'+
       (hasPhoto?('<img alt="" loading="lazy" decoding="async"'+(photoURL[id]?(' src="'+photoURL[id]+'"'):'')+'>'):
-        ('<div class="ph">'+CAM_SVG+'แตะเพื่อเลือกรูป</div>'))+
-      badge+
+        ('<div class="ph">'+CAM_SVG+(picked?'<b>ต้องถ่ายรูปจุดนี้</b>':'แตะเพื่อเลือกรูป')+'</div>'))+
+      (picked?'<span class="pick">📷 สุ่ม</span>':'')+badge+
     '</div>'+
     '<div class="cap">'+
       '<div class="code">'+ordTxt+codeTxt+'</div>'+
@@ -1093,6 +1113,7 @@ function rerenderCard(id){
   if(io)io.unobserve(ph);
   const cd=cardHTML(+m[1],+m[2]);card.className=cd.cls;card.innerHTML=cd.inner;
   observeCards(card);
+  refreshCatHead(+m[1]);   // ตัวนับรูปของจุดที่สุ่ม (📷 x/y) อยู่บนหัวหมวด
   return true;
 }
 function refreshCatHead(si){const h=document.querySelector('.cat[data-si="'+si+'"] .cathead');if(h)h.innerHTML=catHeadHTML(si);}
@@ -1124,6 +1145,7 @@ function render(){
       if(activeFilter==='pending'&&st.result)return false;
       if(activeFilter==='pass'&&st.result!=='pass')return false;
       if(activeFilter==='fail'&&st.result!=='fail')return false;
+      if(activeFilter==='sample'&&!isPicked(uid(si,pi)))return false;
       if(!q)return true;
       return (String(p.code)+' '+String(p.location)+' '+cat.category).toLowerCase().includes(q);
     });
@@ -1143,7 +1165,7 @@ function render(){
   });
   refreshStats();
   if(shown===0){
-    const msg=q?'ไม่พบรายการที่ค้นหา':(activeFilter==='pending'?'ตรวจครบทุกจุดแล้ว 🎉':'ไม่มีรายการในตัวกรองนี้');
+    const msg=q?'ไม่พบรายการที่ค้นหา':(activeFilter==='pending'?'ตรวจครบทุกจุดแล้ว 🎉':(activeFilter==='sample'?'ยังไม่ได้สุ่มจุดถ่ายรูป — กดสุ่มที่เมนู ⋯':'ไม่มีรายการในตัวกรองนี้'));
     list.innerHTML='<div class="empty">'+esc(msg)+'</div>';
   }else observeCards(list);
   trimLRU();
@@ -1273,7 +1295,7 @@ document.querySelectorAll('.stat').forEach(s=>{
   s.addEventListener('click',()=>{
     const f=s.dataset.filter;
     activeFilter=(activeFilter===f||f==='all')?'all':f;
-    saveSettings();
+    saveSettings();syncSampleUI();
     render();
     window.scrollTo({top:0,behavior:'smooth'});
   });
@@ -1347,7 +1369,37 @@ document.getElementById('opt-collapse').onclick=()=>{
 };
 document.getElementById('opt-autonext').onclick=function(){autoNext=!autoNext;this.classList.toggle('on',autoNext);saveSettings();toast(autoNext?'เปิด Auto Next':'ปิด Auto Next');};
 document.getElementById('opt-onlyphoto').onclick=function(){onlyPhotoExport=!onlyPhotoExport;this.classList.toggle('on',onlyPhotoExport);saveSettings();toast(onlyPhotoExport?'จะออกเฉพาะจุดที่มีรูป':'จะออกทุกจุด');};
-document.getElementById('opt-clear').onclick=()=>{if(confirm('ล้างข้อมูลและรูปทั้งหมด?')){clearAll(false);sheet.classList.remove('show');}};
+document.getElementById('opt-clear').onclick=()=>{if(confirm('ล้างข้อมูลและรูปทั้งหมด?')){samplePick.clear();if(activeFilter==='sample')activeFilter='all';saveSettings();syncSampleUI();clearAll(false);sheet.classList.remove('show');}};
+
+// ---- สุ่มจุดถ่ายรูป: หมวดละ SAMPLE_MIN–SAMPLE_MAX จุด (หมวดที่มีจุดน้อยกว่านั้นเอาทุกจุด) ----
+// ผลตรวจปกติ/ไม่ปกติยังกดได้ทุกจุดเหมือนเดิม การสุ่มแค่บอกว่าจุดไหนต้องมีรูป
+function isPicked(id){return samplePick.has(STABLE[id]);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function drawSample(){
+  samplePick.clear();
+  TPL.forEach((cat,si)=>{
+    const k=SAMPLE_MIN+Math.floor(Math.random()*(SAMPLE_MAX-SAMPLE_MIN+1));
+    shuffle(cat.points.map((p,pi)=>uid(si,pi))).slice(0,k).forEach(id=>samplePick.add(STABLE[id]));
+  });
+}
+function syncSampleUI(){
+  const has=samplePick.size>0;
+  document.getElementById('sample-label').textContent=has?'สุ่มจุดถ่ายรูปใหม่':'สุ่มจุดถ่ายรูป (หมวดละ '+SAMPLE_MIN+'–'+SAMPLE_MAX+' จุด)';
+  const f=document.getElementById('opt-samplefilter');f.hidden=!has;f.classList.toggle('on',activeFilter==='sample');
+}
+document.getElementById('opt-sample').onclick=function(){
+  if(samplePick.size&&!confirm('สุ่มจุดถ่ายรูปใหม่?\n(รูปที่ถ่ายไว้แล้วไม่หาย แค่เปลี่ยนว่าจุดไหนต้องถ่าย)'))return;
+  drawSample();
+  // รายงานควรมีเฉพาะรูปที่ถ่าย — ไม่งั้นได้กรอบเทาว่างอีกเกือบทุกจุด
+  onlyPhotoExport=true;document.getElementById('opt-onlyphoto').classList.add('on');
+  activeFilter='sample';saveSettings();syncSampleUI();
+  sheet.classList.remove('show');render();window.scrollTo({top:0,behavior:'smooth'});
+  toast('สุ่มแล้ว '+samplePick.size+' จุด — แสดงเฉพาะจุดที่สุ่ม และจะออกรายงานเฉพาะจุดที่มีรูป');
+};
+document.getElementById('opt-samplefilter').onclick=function(){
+  activeFilter=activeFilter==='sample'?'all':'sample';saveSettings();syncSampleUI();
+  sheet.classList.remove('show');render();window.scrollTo({top:0,behavior:'smooth'});
+};
 // สำรองเป็น ZIP: รูปเก็บเป็น JPEG ดิบ (ไม่ผ่าน base64) และฝั่งกู้คืนอ่านทีละ entry ได้
 document.getElementById('opt-backup').onclick=async function(){
   const btn=this,orig=btn.innerHTML;btn.disabled=true;
@@ -1872,6 +1924,7 @@ async function init(){
   syncTopbarHeight();syncSearchClear();
   document.getElementById('opt-autonext').classList.toggle('on',autoNext);
   document.getElementById('opt-onlyphoto').classList.toggle('on',onlyPhotoExport);
+  syncSampleUI();
   setupIO();
   await openDB();
   await loadAll();
