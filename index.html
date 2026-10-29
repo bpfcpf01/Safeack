@@ -119,7 +119,11 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 .badge.pass{background:var(--pass)}
 .badge.fail{background:var(--fail)}
 .cap{padding:9px 10px 10px}
-.cap .code{font-weight:800;font-size:13px;color:var(--green2)}
+.cap .code{font-weight:800;font-size:13px;color:var(--green2);display:flex;align-items:flex-start;gap:6px}
+.cap .code .ctext{flex:1;min-width:0}
+/* ✎ แก้ชื่อจุด/หมวดจากหน้าตรวจงาน — แก้ได้อย่างเดียว ไม่มีลบ (ลบต้องไปที่แผงแก้ไขรายการ) */
+.qedit{flex:0 0 auto;border:1px solid var(--line);background:var(--panel2);color:var(--mut);font-size:12px;line-height:1;padding:5px 8px;border-radius:8px;cursor:pointer;font-family:inherit}
+.qedit:active{transform:scale(.92)}
 .cap .ord{color:var(--mut);font-weight:600}
 .cap .loc{font-size:11.5px;color:var(--txt);margin-top:2px;min-height:15px}
 .controls{display:flex;gap:7px;margin-top:9px}
@@ -228,8 +232,10 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 .tplbtns .tpldel.armed{background:var(--fail);color:#fff;border-color:var(--fail);min-width:84px;font-weight:700}
 .tplform{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--green);border-radius:12px;background:rgba(24,135,68,.05);margin-bottom:10px}
 .tplform label{font-size:11.5px;color:var(--mut);font-weight:600}
+.tplform select{width:100%;padding:10px 11px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--txt);font-size:14px;font-family:inherit}
 .tplform input{width:100%;padding:10px 11px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--txt);font-size:14px;font-family:inherit}
 .tplform .frow{display:flex;gap:8px}
+.tplform input[hidden]{display:none}
 .tplform .frow>div{display:flex;flex-direction:column;gap:6px;min-width:0}
 .lightbox{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:20px}
 .lightbox.show{display:flex}
@@ -427,6 +433,9 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
         <p style="margin-top:10px"><b>Auto Next</b> (เปิดไว้เป็นค่าเริ่มต้น): พอกดผลตรวจ หน้าจอจะเลื่อนไปจุดถัดไปให้เอง
           และกรอบเขียวจะกระพริบที่การ์ดใหม่ ปิดได้ในเมนู <span class="k">⋯</span></p>
         <p><b>ดูรูปใหญ่:</b> แตะรูปที่มีอยู่แล้ว แตะอีกครั้งเพื่อปิด · <b>ลบรูป:</b> กด <span class="k">✕</span> ข้างปุ่มถ่ายรูป</p>
+        <p><b>แก้ชื่อจุด / ย้ายหมวด:</b> กด <span class="k">✎</span> ข้างรหัสบนการ์ด แก้ลำดับ รหัส ตำแหน่ง
+          หรือเลือกหมวดใหม่ (มี "＋ หมวดใหม่…" ให้ตั้งหมวดเพิ่ม) · <b>แก้ชื่อหมวด:</b> กด <span class="k">✎</span> บนหัวหมวด
+          ผลตรวจ หมายเหตุ และรูปย้ายตามจุดไปด้วย กด "เลิกทำ" ได้ — ส่วนเพิ่ม/ลบจุดยังต้องไปที่เมนู ⋯ → "แก้ไขรายการตรวจ"</p>
         <div class="note-box ok-box">ทุกอย่างบันทึกทันที <b>ไม่มีปุ่ม "บันทึก"</b> และไม่ต้องกดอะไรก่อนปิดแอป</div>
       </div>
     </details>
@@ -1043,7 +1052,8 @@ function catHeadHTML(si){
   const badPill=cBad>0?('<span class="cn cn-bad">ไม่ปกติ '+cBad+'</span>'):'';
   const nPh=catPhotoCount(si);
   const phPill=nPh>0?('<span class="cn cn-ph'+(photoCountOK(si,nPh)?' ok':'')+'">📷 '+nPh+'</span>'):'';
-  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+phPill+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
+  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+
+    '<button class="qedit" data-act="catedit" data-si="'+si+'" aria-label="แก้ชื่อหมวด">✎</button>'+phPill+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
 }
 function cardHTML(si,pi){
   const id=uid(si,pi);const p=TPL[si].points[pi];const st=meta[id]||{};
@@ -1063,7 +1073,8 @@ function cardHTML(si,pi){
       badge+
     '</div>'+
     '<div class="cap">'+
-      '<div class="code">'+ordTxt+codeTxt+'</div>'+
+      '<div class="code"><span class="ctext">'+ordTxt+codeTxt+'</span>'+
+        '<button class="qedit" data-act="cardedit" data-id="'+id+'" aria-label="แก้ชื่อจุดหรือย้ายหมวด">✎</button></div>'+
       '<div class="loc">'+(p.location?esc(p.location):'—')+'</div>'+
       '<div class="phactions">'+
         '<button data-act="gallery" data-id="'+id+'">📁 เลือกรูป</button>'+
@@ -1172,6 +1183,8 @@ function render(){
 document.getElementById('list').addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
   const act=el.dataset.act,id=el.dataset.id;
+  if(act==='cardedit'){const m=/^s(\d+)p(\d+)$/.exec(id);if(m)tplOpenPoint(+m[1],+m[2]);return;}
+  if(act==='catedit'){tplOpenCat(+el.dataset.si);return;}
   if(act==='gallery'){pickPhoto(id,false);}
   else if(act==='camera'){pickPhoto(id,true);}
   else if(act==='view'){ensurePhotoURL(id).then(function(u){if(u){document.getElementById('lb-img').src=u;document.getElementById('lightbox').classList.add('show');}});}
@@ -1498,6 +1511,19 @@ let tplBusy=false;
 
 function tplOpen(){tplView=null;tplForm=null;tplDisarm();tplRender();tplsheet.classList.add('show');}
 function tplClose(){tplsheet.classList.remove('show');tplForm=null;tplDisarm();}
+// เปิดฟอร์มจากการ์ด/หัวหมวดโดยตรง — fromCard: บันทึกหรือยกเลิกแล้วปิดแผงกลับหน้าตรวจงานเลย
+function tplOpenPoint(si,pi){
+  const p=TPL[si]&&TPL[si].points[pi];if(!p)return;
+  tplView=si;tplDisarm();
+  tplForm={kind:'pt',pi:pi,isNew:false,fromCard:true,order:p.order,code:p.code,location:p.location};
+  tplRender();tplsheet.classList.add('show');
+}
+function tplOpenCat(si){
+  if(!TPL[si])return;
+  tplView=null;tplDisarm();
+  tplForm={kind:'cat',si:si,isNew:false,fromCard:true,category:TPL[si].category};
+  tplRender();tplsheet.classList.add('show');
+}
 function tplDisarm(){clearTimeout(tplArmT);tplArmT=null;tplArm=null;}
 function tplArmed(key){
   if(tplArm===key){tplDisarm();return true;}   // กดซ้ำที่เดิม = ยืนยัน
@@ -1589,10 +1615,18 @@ function tplRenderForm(b,f,ttl){
       '</div>'+
       '<label for="tf-loc">ตำแหน่ง</label>'+
       '<input id="tf-loc" type="text" value="'+esc(k.location||'')+'" placeholder="เช่น โรงพักขยะ 1">'+
+      (k.isNew?'':(
+        '<label for="tf-move">หมวด</label>'+
+        '<select id="tf-move">'+TPL.map(function(c,si){
+          return '<option value="'+si+'"'+(si===tplView?' selected':'')+'>'+esc(c.category)+'</option>';}).join('')+
+          '<option value="new">＋ หมวดใหม่…</option></select>'+
+        '<input id="tf-newcat" type="text" placeholder="ชื่อหมวดใหม่" hidden>'))+
       '</div>';
   }
   f.innerHTML='<button class="opt" data-act="fcancel">ยกเลิก</button>'+
               '<button class="opt on" data-act="fsave">บันทึก</button>';
+  const mv=document.getElementById('tf-move'),nc=document.getElementById('tf-newcat');
+  if(mv)mv.onchange=function(){nc.hidden=mv.value!=='new';if(!nc.hidden)nc.focus();};
   const first=b.querySelector('input');if(first)first.focus();
 }
 
@@ -1628,6 +1662,7 @@ function tplSave(){
     if(!v){toast('กรุณากรอกชื่อหมวด');return;}
     if(k.isNew)tplMutate(function(){TPL.push({slide:TPL.length+1,category:v,cid:newId('c_'),points:[]});},'เพิ่มหมวด «'+v+'» แล้ว');
     else tplMutate(function(){TPL[k.si].category=v;},'แก้ชื่อหมวดแล้ว');
+    if(k.fromCard){tplForm=null;tplClose();return;}
   }else{
     const si=tplView;if(si==null)return;
     const ord=(document.getElementById('tf-ord').value||'').trim();
@@ -1636,7 +1671,22 @@ function tplSave(){
     if(!code&&!loc){toast('กรุณากรอกรหัสหรือตำแหน่งอย่างน้อยหนึ่งช่อง');return;}
     // จุดใหม่ได้ id ของตัวเองทันที — แก้ข้อความทีหลังผลตรวจจึงไม่หลุด
     if(k.isNew)tplMutate(function(){TPL[si].points.push({id:newId('p_'),order:ord,code:code,location:loc});},'เพิ่มจุดตรวจแล้ว');
-    else tplMutate(function(){const p=TPL[si].points[k.pi];p.order=ord;p.code=code;p.location=loc;},'แก้ไขจุดตรวจแล้ว');
+    else{
+      const mv=document.getElementById('tf-move');
+      const to=mv?mv.value:String(si);
+      const newCat=to==='new'?(document.getElementById('tf-newcat').value||'').trim():'';
+      if(to==='new'&&!newCat){toast('กรุณากรอกชื่อหมวดใหม่');return;}
+      const ti=to==='new'?-1:+to;
+      tplMutate(function(){
+        const p=TPL[si].points[k.pi];p.order=ord;p.code=code;p.location=loc;
+        if(ti===si)return;
+        // ย้ายหมวด: p ถูก freezeTemplate() ใส่ id แล้ว ผลตรวจกับรูปจึงย้ายตามไปด้วย
+        TPL[si].points.splice(k.pi,1);
+        if(ti<0)TPL.push({slide:TPL.length+1,category:newCat,cid:newId('c_'),points:[p]});
+        else TPL[ti].points.push(p);
+      },ti===si?'แก้ไขจุดตรวจแล้ว':('ย้ายไปหมวด «'+(ti<0?newCat:TPL[ti].category)+'» แล้ว'));
+    }
+    if(k.fromCard){tplForm=null;tplClose();return;}
   }
   tplForm=null;
 }
@@ -1690,7 +1740,7 @@ tplsheet.addEventListener('click',function(e){
       toastAction('คืนค่ารายการเริ่มต้นแล้ว','เลิกทำ',tplUndoApply,8000);
     });
   }
-  else if(act==='fcancel'){tplForm=null;tplRender();}
+  else if(act==='fcancel'){if(tplForm&&tplForm.fromCard){tplClose();return;}tplForm=null;tplRender();}
   else if(act==='fsave')tplSave();
 });
 
