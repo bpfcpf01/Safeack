@@ -96,6 +96,8 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 .cathead .ct{font-weight:700;font-size:13.5px;flex:1;color:var(--green2)}
 .cathead .cn{font-size:11px;color:var(--mut);background:var(--panel2);padding:3px 9px;border-radius:20px}
 .cathead .cn-ok{color:#fff;background:var(--pass)}
+.cathead .cn-ph{color:#fff;background:#d9920c}
+.cathead .cn-ph.ok{background:#2563c9}
 .cathead .cn-bad{color:#fff;background:var(--fail)}
 .cathead .chev{color:var(--mut);transition:transform .2s;font-size:12px}
 .cat.collapsed .chev{transform:rotate(-90deg)}
@@ -462,7 +464,10 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
         <div class="note-box warn-box">ถ้าขึ้นว่า <b>ส่งไฟล์ไม่สำเร็จ ให้กด "ดาวน์โหลด" ในแผงเดิม</b> —
           ไฟล์ยังอยู่ ไม่ต้องสร้างใหม่ แต่ถ้าเผลอปิดแผงไปแล้วต้องกดสร้างใหม่</div>
         <p style="margin-top:9px">ตัวเลือก <b>"เลือกออกเฉพาะจุดที่มีรูป"</b> ในเมนู <span class="k">⋯</span>
-          จะตัดจุดที่ยังไม่มีรูปออกจากรายงาน เหมาะกับการส่งรายงานระหว่างทาง</p>
+          จะตัดจุดที่ยังไม่มีรูปออกจากรายงาน <b>เปิดไว้เป็นค่าเริ่มต้น</b></p>
+        <p style="margin-top:9px"><b>รูปตัวอย่างหมวดละ 3–5 รูป</b> — ไม่ต้องถ่ายทุกจุด เลือกจุดที่จะใช้นำเสนอแล้วใส่รูปเฉพาะจุดนั้น
+          หัวหมวดบอกจำนวนรูป เช่น <code>📷 4</code> สีฟ้า = ครบแล้ว สีส้ม = ยังน้อยหรือเกิน
+          ตอนกดออก PowerPoint แอปจะเตือนหมวดที่รูปยังไม่ครบ (กดออกต่อได้)</p>
       </div>
     </details>
 
@@ -682,7 +687,10 @@ const photoKeys=new Set();  // uid ที่ "มีรูป" — แหล่�
 const photoBlob={};     // uid -> Blob — โหมด fallback (ไม่มี IDB) หรือ cache ชั่วคราวรอแสดงผล
 const photoURL={};      // uid -> object URL ที่ยังมีชีวิต (จำกัดจำนวนด้วย LRU)
 let orphanPhotoKeys=[]; // stable id ของรูปใน IDB ที่ template ไม่รู้จักแล้ว
-let onlyPhotoExport=false;
+// ที่ใหม่ผู้ตรวจเลือกถ่ายรูปเองหมวดละ PHOTO_MIN–PHOTO_MAX รูปเป็นตัวอย่าง ไม่ใช่ทุกจุด
+// รายงานจึงออกเฉพาะจุดที่มีรูปเป็นค่าเริ่มต้น (ปิดได้ในเมนู ⋯)
+const PHOTO_MIN=3, PHOTO_MAX=5;
+let onlyPhotoExport=true;
 let activeFilter='all'; // all | pending | pass | fail
 let autoNext=true;      // jump to next point after marking result
 const collapsedCats=new Set();  // cid ของหมวดที่ถูกยุบ — ใช้ cid ไม่ใช้ดัชนี เพราะดัชนีเลื่อนได้เมื่อสลับ/ลบหมวด
@@ -1020,12 +1028,17 @@ function toastAction(m,label,fn,ms){
 
 const CAM_SVG='<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 8a2 2 0 012-2h2l1.5-2h7L18 6h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="#5a6878" stroke-width="1.6"/><circle cx="12" cy="12.5" r="3.2" stroke="#5a6878" stroke-width="1.6"/></svg>';
 
+function catPhotoCount(si){let n=0;TPL[si].points.forEach((p,pi)=>{if(photoKeys.has(uid(si,pi)))n++;});return n;}
+// หมวดที่มีจุดน้อยกว่า PHOTO_MIN ถ่ายครบทุกจุดก็ถือว่าพอ
+function photoCountOK(si,n){return n>=Math.min(PHOTO_MIN,TPL[si].points.length)&&n<=PHOTO_MAX;}
 function catHeadHTML(si){
   const cat=TPL[si];let cOk=0,cBad=0;
   cat.points.forEach((p,pi)=>{const st=meta[uid(si,pi)]||{};if(st.result==='pass')cOk++;else if(st.result==='fail')cBad++;});
   const okPill=cOk>0?('<span class="cn cn-ok">ปกติ '+cOk+'</span>'):'';
   const badPill=cBad>0?('<span class="cn cn-bad">ไม่ปกติ '+cBad+'</span>'):'';
-  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
+  const nPh=catPhotoCount(si);
+  const phPill=nPh>0?('<span class="cn cn-ph'+(photoCountOK(si,nPh)?' ok':'')+'">📷 '+nPh+'</span>'):'';
+  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+phPill+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
 }
 function cardHTML(si,pi){
   const id=uid(si,pi);const p=TPL[si].points[pi];const st=meta[id]||{};
@@ -1093,6 +1106,7 @@ function rerenderCard(id){
   if(io)io.unobserve(ph);
   const cd=cardHTML(+m[1],+m[2]);card.className=cd.cls;card.innerHTML=cd.inner;
   observeCards(card);
+  refreshCatHead(+m[1]);   // ตัวนับรูป 📷 บนหัวหมวด
   return true;
 }
 function refreshCatHead(si){const h=document.querySelector('.cat[data-si="'+si+'"] .cathead');if(h)h.innerHTML=catHeadHTML(si);}
@@ -1665,6 +1679,14 @@ tplsheet.addEventListener('click',function(e){
 
 // ====== EXPORT POWERPOINT ======
 document.getElementById('btn-export').onclick=async function(){
+  if(onlyPhotoExport){
+    // เตือนก่อนสร้าง (ใช้เวลานาน) ว่าหมวดไหนรูปไม่ถึง/เกินที่กำหนด — เตือนเท่านั้น ไม่บังคับ
+    const off=[];
+    TPL.forEach((c,si)=>{const n=catPhotoCount(si);if(!photoCountOK(si,n))off.push('• '+c.category+' — '+n+' รูป');});
+    if(off.length&&!confirm('หมวดที่รูปไม่อยู่ในช่วง '+PHOTO_MIN+'–'+PHOTO_MAX+' รูป ('+off.length+' หมวด):\n'+
+        off.slice(0,12).join('\n')+(off.length>12?'\n…และอีก '+(off.length-12)+' หมวด':'')+
+        '\n\nหมวดที่ไม่มีรูปจะไม่มีสไลด์รูป (ยังอยู่ในตารางสรุป)\nออกรายงานต่อไหม?'))return;
+  }
   const btn=this;btn.disabled=true;const orig=btn.innerHTML;btn.innerHTML='กำลังสร้าง…';
   try{
     btn.innerHTML='กำลังโหลด…';
