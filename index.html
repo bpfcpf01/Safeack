@@ -642,7 +642,7 @@ window.REPORT_FIXED = {"category": "สายกราวตู้น้ำด�
 const FORM_CODE='EF-SF-002';
 // เวอร์ชันแอป — เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ (วันที่.ลำดับ) โชว์ในคู่มือ เมนู ⋯ และฝังในไฟล์ PowerPoint (docProps)
 // GitHub Pages แคชหน้าเว็บได้ถึง 10 นาที — ผู้ใช้ดูเลขนี้เพื่อยืนยันว่าได้เวอร์ชันล่าสุดแล้ว
-const APP_VERSION='2026.10.29-9';
+const APP_VERSION='2026.10.29-10';
 document.querySelectorAll('[data-app-version]').forEach(function(el){el.textContent=APP_VERSION;});
 document.querySelectorAll('[data-form-code]').forEach(function(el){el.textContent=FORM_CODE;});
 const META_KEY='safetrack_ef002_meta_v2'; // small metadata only (result/note)
@@ -1782,7 +1782,10 @@ tplsheet.addEventListener('click',function(e){
 // พื้นหลัง (โลโก้ ใบไม้ แถบหัวเรื่อง) เป็นรูปที่ฝังไว้ใน REPORT_BG ส่วนข้อความวาดเองทั้งหมด
 const RPT_FONT='CPF Imm Sook';   // ฟอนต์ของแม่แบบ — เครื่องที่ไม่มีจะใช้ฟอนต์ไทยแทนให้เอง
 // ไม่ใช้ fit:'shrink' — PowerPoint ไม่ย่อจนกว่าจะแก้กล่อง ส่วนโปรแกรมอื่นย่อเกินจริง เลือกขนาดตามความยาวแทน
-function fitSize(t,base){const n=String(t).length;return n>60?base-5:n>40?base-4:n>24?base-2:base;}
+// CPF Imm Sook บนเครื่องผู้ใช้แสดงไทยเพี้ยนที่ขนาดเล็ก — ไฟล์ทดสอบ (ข้อความ/กล่องเดียวกัน): 11pt เพี้ยนทุกแบบ
+// ไม่ว่า charset/lang/ตัดบรรทัด, 13pt ปกติ จึงห้ามข้อความฟอนต์นี้ต่ำกว่า RPT_MIN_PT (ยังไม่ได้ทดสอบ 12pt)
+const RPT_MIN_PT=13;
+function fitSize(t,base){const n=String(t).length;return Math.max(RPT_MIN_PT,n>60?base-5:n>40?base-4:n>24?base-2:base);}
 // แถบสถานะบนการ์ดสูงแค่ 2 บรรทัด — หมายเหตุยาวตัดท้าย (ข้อความเต็มอยู่ในตารางสรุป)
 // pptxgenjs ประกาศฟอนต์ด้วย charset ของละติน/เกาหลี/จีน — CPF Imm Sook เป็นฟอนต์ไทยแบบเก่าที่พึ่ง charset
 // เครื่องที่ติดตั้งฟอนต์นี้จึงแปลงข้อความไทยผ่าน code page ผิดจนกลายเป็น "√"¬-"∫…" ทั้งไฟล์ (เจอจริงแล้ว)
@@ -1933,7 +1936,7 @@ document.getElementById('btn-export').onclick=async function(){
         cell(c.total),
         cell(c.ok),
         cell(c.bad>0?c.bad:''),
-        cell(c.notes.join('\n'),{align:'left',fontSize:12,color:'c0392b'})
+        cell(c.notes.join('\n'),{align:'left',fontSize:RPT_MIN_PT,color:'c0392b'})
       ]);
     });
     const nBefore=pptx.slides.length;
@@ -1959,10 +1962,11 @@ document.getElementById('btn-export').onclick=async function(){
       if(items.length&&!isFixedCat(cat)) groups.push({cat:cat,items:items});
     }
     const PER=5, X0=0.3, AREA_W=12.73, Y0=1.4;
-    const H_HEAD=0.8, H_PHOTO=3.5, H_AREA=0.72, H_STAT=0.6;
+    // แถบพื้นที่/สถานะสูงพอให้ข้อความ 3 บรรทัดที่ 13pt (ขนาดต่ำสุดของฟอนต์ CPF) — ล่างสุด y≈7.05 ไม่ทับเลขหน้า
+    const H_HEAD=0.8, H_PHOTO=3.2, H_AREA=0.95, H_STAT=0.7;
     const pages=packCards(groups,PER);
     const drawStatus=function(s,x,y,w,st){
-      const statTxt=st.result==='pass'?'ปกติ':(st.result==='fail'?clip(st.note||'ไม่ปกติ',70):'ยังไม่ตรวจ');
+      const statTxt=st.result==='pass'?'ปกติ':(st.result==='fail'?clip(st.note||'ไม่ปกติ',48):'ยังไม่ตรวจ');
       const statFill=st.result==='fail'?RPT.fail:(st.result==='pass'?RPT.teal:RPT.pend);
       s.addText('ความผิดปกติ : '+statTxt,{x:x,y:y,w:w,h:H_STAT,fill:{color:statFill},fontFace:RPT_FONT,fontSize:fitSize('ความผิดปกติ : '+statTxt,15),color:'FFFFFF',align:'center',valign:'middle',margin:3});
     };
@@ -2030,7 +2034,8 @@ document.getElementById('btn-export').onclick=async function(){
         y+=H_PHOTO;
         const areaTxt='พื้นที่ : '+(it.p.location||'-');
         const area=[{text:areaTxt,options:{fontSize:fitSize(areaTxt,15),color:'000000'}}];
-        if(it.p.code)area.push({text:it.p.code,options:{breakLine:false,fontSize:11,color:'555555'}});
+        // รหัสเป็นตัวอักษรละตินล้วน ใช้ Arial ได้ที่ 11pt — ฟอนต์ CPF ห้ามต่ำกว่า RPT_MIN_PT
+        if(it.p.code)area.push({text:it.p.code,options:{breakLine:false,fontSize:11,color:'555555',fontFace:'Arial'}});
         if(it.p.code)area[0].options.breakLine=true;
         s.addText(area,{x:x,y:y,w:cw,h:H_AREA,fill:{color:RPT.mint2},fontFace:RPT_FONT,align:'center',valign:'middle',margin:3});
         y+=H_AREA;
