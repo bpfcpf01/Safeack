@@ -464,7 +464,8 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
           (<code>กำลังสร้าง… 20/48</code>) <b>ห้ามปิดหน้าจอระหว่างนี้</b></p>
         <p>ไฟล์ที่ได้ชื่อ <code>รายงานอุปกรณ์ฉุกเฉิน-ปปปป-ดด-วว.pptx</code> ประกอบด้วย</p>
         <ol>
-          <li><b>ปก</b> "รายงานผลการดำเนินการประจำเดือน" + เดือน/ปีปัจจุบัน + หน่วยงาน + ผู้นำเสนอ
+          <li><b>ปก</b> "รายงานผลการดำเนินการประจำเดือน" + เดือน/ปี + หน่วยงาน + ผู้นำเสนอ
+            (ตอนกดออกแอปจะถามเดือนที่รายงาน — วันที่ 1–10 เสนอเดือนก่อนให้ แก้ได้ เช่น <code>9/2569</code>)
             (ตั้งได้ที่เมนู <span class="k">⋯</span> → "หน้าปกรายงาน")</li>
           <li><b>ตารางสรุป</b> 1 บรรทัดต่อ 1 ประเภทอุปกรณ์:
             อุปกรณ์ที่ตรวจ / จำนวนที่มี / ปกติ / ไม่ปกติ / อธิบายสภาพที่ไม่ปกติ
@@ -472,7 +473,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
           <li><b>การ์ดรูป</b> หน้าละไม่เกิน 5 ใบ แต่ละใบมี ชื่อหมวด / รูป / พื้นที่ + รหัส /
             ความผิดปกติ (ปกติ = แถบเขียว · ไม่ปกติ = แถบแดงพร้อมหมายเหตุ)
             — หน้า <b>Safety Device (สายกราวด์)</b> ใช้รูปชุดเดิมทุกเดือน ไม่ต้องถ่ายใหม่
-            ถ้าจุดไหนเสียให้กด "ไม่ปกติ" + หมายเหตุที่การ์ดในแอปตามปกติ</li>
+            แต่ยัง<b>ต้องกดผลตรวจ</b> ปกติ/ไม่ปกติ ทั้ง 5 จุดในแอป ไม่งั้นรายงานขึ้น "ยังไม่ตรวจ" (แอปเตือนก่อนออก)</li>
           <li><b>จบการนำเสนอ</b> และเลขหน้ามุมขวาล่าง (ยกเว้นปกกับหน้าจบ)</li>
         </ol>
         <p>เสร็จแล้วจะขึ้นแผง <b>"ไฟล์พร้อมแล้ว"</b> ให้เลือก
@@ -721,6 +722,7 @@ let orphanPhotoKeys=[]; // stable id ของรูปใน IDB ที่ temp
 let PHOTO_MIN=3, PHOTO_MAX=5;
 // ข้อความบนปกรายงาน — ตั้งได้จากเมนู ⋯ (เก็บใน settings)
 let REPORT_DEPT='ธุรการ', REPORT_BY='';
+let FIXED_CID='';   // cid ของหมวดที่ใช้หน้าตรึง Safety Device (ดู fixedSi())
 let onlyPhotoExport=true;
 let activeFilter='all'; // all | pending | pass | fail
 let autoNext=true;      // jump to next point after marking result
@@ -887,8 +889,8 @@ function saveMeta(){
 let _metaT=null;
 function saveMetaSoon(){clearTimeout(_metaT);_metaT=setTimeout(function(){_metaT=null;saveMeta();},400);}
 function flushMeta(){if(_metaT){clearTimeout(_metaT);_metaT=null;saveMeta();}}
-function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats],photoMin:PHOTO_MIN,photoMax:PHOTO_MAX,reportDept:REPORT_DEPT,reportBy:REPORT_BY}));}
-function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(Number.isInteger(s.photoMin)&&Number.isInteger(s.photoMax)&&s.photoMin>=1&&s.photoMin<=s.photoMax){PHOTO_MIN=s.photoMin;PHOTO_MAX=s.photoMax;}if(typeof s.reportDept==='string')REPORT_DEPT=s.reportDept;if(typeof s.reportBy==='string')REPORT_BY=s.reportBy;if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});}catch(e){}}
+function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats],photoMin:PHOTO_MIN,photoMax:PHOTO_MAX,reportDept:REPORT_DEPT,reportBy:REPORT_BY,fixedCid:FIXED_CID}));}
+function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(Number.isInteger(s.photoMin)&&Number.isInteger(s.photoMax)&&s.photoMin>=1&&s.photoMin<=s.photoMax){PHOTO_MIN=s.photoMin;PHOTO_MAX=s.photoMax;}if(typeof s.reportDept==='string')REPORT_DEPT=s.reportDept;if(typeof s.reportBy==='string')REPORT_BY=s.reportBy;if(typeof s.fixedCid==='string')FIXED_CID=s.fixedCid;if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});}catch(e){}}
 
 // ---- photo ops ----
 // รูปทั้งชุดคือ ~40–80MB จึงถือ object URL ไว้แค่ไม่กี่ใบ แล้วโหลดที่เหลือจาก IDB เมื่อเลื่อนถึง
@@ -1680,6 +1682,8 @@ function tplUndoApply(){
 }
 function tplSave(){
   const k=tplForm;if(!k)return;
+  // tplMutate() ข้ามเงียบ ๆ ตอน busy — ถ้าปล่อยให้ปิดแผง ผู้ใช้จะนึกว่าบันทึกแล้ว
+  if(tplBusy){toast('กำลังบันทึกการแก้ก่อนหน้า — กดบันทึกอีกครั้ง');return;}
   if(k.kind==='cat'){
     const v=(document.getElementById('tf-cat').value||'').trim();
     if(!v){toast('กรุณากรอกชื่อหมวด');return;}
@@ -1771,16 +1775,44 @@ tplsheet.addEventListener('click',function(e){
 // หน้าตารายงานตามแม่แบบรายงานประจำเดือนของ CPF/BPF (ไฟล์ตัวอย่าง ก.ย. 2569):
 // ปก → ตารางสรุป → การ์ดรูปหน้าละไม่เกิน 5 ใบ → จบการนำเสนอ
 // พื้นหลัง (โลโก้ ใบไม้ แถบหัวเรื่อง) เป็นรูปที่ฝังไว้ใน REPORT_BG ส่วนข้อความวาดเองทั้งหมด
-const RPT_FONT='CPF Imm Sook';
+const RPT_FONT='CPF Imm Sook';   // ฟอนต์ของแม่แบบ — เครื่องที่ไม่มีจะใช้ฟอนต์ไทยแทนให้เอง
 // ไม่ใช้ fit:'shrink' — PowerPoint ไม่ย่อจนกว่าจะแก้กล่อง ส่วนโปรแกรมอื่นย่อเกินจริง เลือกขนาดตามความยาวแทน
-function fitSize(t,base){const n=String(t).length;return n>60?base-5:n>40?base-4:n>24?base-2:base;}   // ฟอนต์ของแม่แบบ — เครื่องที่ไม่มีจะใช้ฟอนต์ไทยแทนให้เอง
+function fitSize(t,base){const n=String(t).length;return n>60?base-5:n>40?base-4:n>24?base-2:base;}
+// แถบสถานะบนการ์ดสูงแค่ 2 บรรทัด — หมายเหตุยาวตัดท้าย (ข้อความเต็มอยู่ในตารางสรุป)
+function clip(t,n){t=String(t);return t.length>n?t.slice(0,n-1)+'…':t;}
 const RPT={teal:'66BFB1',mint:'CCEAE5',mint2:'DBF0EC',photoBg:'EDEDED',fail:'D9534F',pend:'9AA5A3'};
 const TH_MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 function reportMonthText(d){return TH_MONTHS[d.getMonth()]+' '+(d.getFullYear()+543);}
+// รายงานประจำเดือนมักทำต้นเดือนถัดไป: วันที่ 1–10 เสนอเดือนก่อน นอกนั้นเดือนนี้ (ผู้ใช้แก้ได้ทุกครั้งก่อนออก)
+function defaultReportMonth(now){const d=new Date(now.getFullYear(),now.getMonth(),1);if(now.getDate()<=10)d.setMonth(d.getMonth()-1);return d;}
+// รับ "9/2569", "09/2026", "กันยายน 2569", "ก.ย. 2569" → Date วันที่ 1 ของเดือนนั้น หรือ null
+function parseReportMonth(t){
+  t=String(t||'').trim();let m,y;
+  const a=/^(\d{1,2})\s*[\/\-.]\s*(\d{4})$/.exec(t);
+  if(a){m=+a[1]-1;y=+a[2];}
+  else{
+    const ABBR=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const b=/^(\S+)\s*(\d{4})$/.exec(t);if(!b)return null;
+    m=TH_MONTHS.indexOf(b[1]);if(m<0)m=ABBR.indexOf(b[1]);y=+b[2];
+  }
+  if(!(m>=0&&m<12))return null;
+  if(y>2400)y-=543;   // พ.ศ. → ค.ศ.
+  if(y<2000||y>2200)return null;
+  return new Date(y,m,1);
+}
 function imgDims(src){return new Promise(function(res){const i=new Image();i.onload=function(){res({w:i.naturalWidth||1,h:i.naturalHeight||1});};i.onerror=function(){res({w:1,h:1});};i.src=src;});}
 // จัดการ์ดลงสไลด์: หมวดที่ใส่ได้ทั้งหมวดอยู่หน้าเดียวกับหมวดก่อนหน้าได้ หมวดที่ใหญ่เกินแตกเป็นหลายหน้า
 // หมวดที่ใช้หน้ารูปตรึง (REPORT_FIXED) — ไม่ต้องถ่ายรูปเอง ไม่ต้องเตือน และไม่ออกเป็นการ์ดซ้ำ
-function isFixedCat(c){const F=window.REPORT_FIXED;return !!(F&&c&&c.category.trim()===F.category);}
+// หาครั้งแรกด้วยชื่อหมวด แล้วจำ cid ไว้ใน settings — แก้ชื่อหมวดจากการ์ดทีหลังก็ยังหาเจอ
+// (cid ของรายการที่ยังไม่ถูกแก้คือ 'i'+ดัชนี และ freezeTemplate() คงค่าเดิมไว้ จึงตามหมวดได้ตลอด)
+function fixedSi(){
+  const F=window.REPORT_FIXED;if(!F)return -1;
+  let i=FIXED_CID?TPL.findIndex((c,si)=>cidOf(c,si)===FIXED_CID):-1;
+  if(i<0){i=TPL.findIndex(c=>c.category.trim()===F.category);
+    if(i>=0){FIXED_CID=cidOf(TPL[i],i);saveSettings();}}
+  return i;
+}
+function isFixedCat(c){const i=fixedSi();return i>=0&&TPL[i]===c;}
 function packCards(groups,per){
   const pages=[];let cur=[];
   groups.forEach(function(g){
@@ -1791,6 +1823,13 @@ function packCards(groups,per){
   return pages;
 }
 document.getElementById('btn-export').onclick=async function(){
+  const fsiChk=fixedSi(),F0=window.REPORT_FIXED;
+  if(F0){
+    // หน้าตรึงใช้ผลตรวจจริง — เตือนถ้ายังไม่ได้กด จะได้ไม่ออกรายงานที่ขึ้น "ยังไม่ตรวจ" โดยไม่ตั้งใจ
+    if(fsiChk<0){if(!confirm('ไม่พบหมวด «'+F0.category+'» สำหรับหน้า Safety Device\nหน้านั้นจะขึ้น "ยังไม่ตรวจ" ทุกใบ\n\nออกรายงานต่อไหม?'))return;}
+    else{let pend=0;for(let k=0;k<F0.photos.length;k++){const st=meta[uid(fsiChk,k)];if(!st||!st.result)pend++;}
+      if(pend&&!confirm('หน้า Safety Device ('+TPL[fsiChk].category+') ยังไม่ได้กดผลตรวจ '+pend+' จุด\nจุดเหล่านั้นจะขึ้น "ยังไม่ตรวจ" ในรายงาน\n\nออกรายงานต่อไหม?'))return;}
+  }
   if(onlyPhotoExport){
     // เตือนก่อนสร้าง (ใช้เวลานาน) ว่าหมวดไหนรูปไม่ถึง/เกินที่กำหนด — เตือนเท่านั้น ไม่บังคับ
     const off=[];
@@ -1799,6 +1838,10 @@ document.getElementById('btn-export').onclick=async function(){
         off.slice(0,12).join('\n')+(off.length>12?'\n…และอีก '+(off.length-12)+' หมวด':'')+
         '\n\nหมวดที่ไม่มีรูปจะไม่มีสไลด์รูป (ยังอยู่ในตารางสรุป)\nออกรายงานต่อไหม?'))return;
   }
+  const mIn=prompt('รายงานประจำเดือน (เช่น 9/2569 หรือ กันยายน 2569)',reportMonthText(defaultReportMonth(new Date())));
+  if(mIn===null)return;
+  const mDate=parseReportMonth(mIn);
+  if(!mDate){toast('รูปแบบเดือนไม่ถูกต้อง — เช่น 9/2569 หรือ กันยายน 2569');return;}
   const btn=this;btn.disabled=true;const orig=btn.innerHTML;btn.innerHTML='กำลังสร้าง…';
   try{
     btn.innerHTML='กำลังโหลด…';
@@ -1813,7 +1856,7 @@ document.getElementById('btn-export').onclick=async function(){
     pptx.defineSlideMaster({title:'RPT_TITLE',background:BG.title?{data:BG.title}:{color:'49C5B1'}});
     pptx.defineSlideMaster({title:'RPT_PAGE',background:BG.page?{data:BG.page}:{color:'FFFFFF'}});
     pptx.defineSlideMaster({title:'RPT_END',background:BG.end?{data:BG.end}:{color:'49C5B1'}});
-    const month=reportMonthText(new Date());
+    const month=reportMonthText(mDate);
     // หัวเรื่องในแถบสีเขียวมุมขวาบน (ตำแหน่งตามแม่แบบ)
     const banner=function(s,t){s.addText(t,{x:4.25,y:0.36,w:8.7,h:0.82,fontFace:RPT_FONT,fontSize:22,bold:true,color:'FFFFFF',valign:'middle',margin:2});};
     // ช่องรูปใหญ่สุด ~3.9 นิ้ว — 1000px ≈ 256 DPI พอสำหรับพิมพ์ (รายงานนี้มีรูปแค่หลักสิบใบ แรมไม่ใช่ปัญหา)
@@ -1886,7 +1929,7 @@ document.getElementById('btn-export').onclick=async function(){
     const H_HEAD=0.8, H_PHOTO=3.5, H_AREA=0.72, H_STAT=0.6;
     const pages=packCards(groups,PER);
     const drawStatus=function(s,x,y,w,st){
-      const statTxt=st.result==='pass'?'ปกติ':(st.result==='fail'?(st.note||'ไม่ปกติ'):'ยังไม่ตรวจ');
+      const statTxt=st.result==='pass'?'ปกติ':(st.result==='fail'?clip(st.note||'ไม่ปกติ',70):'ยังไม่ตรวจ');
       const statFill=st.result==='fail'?RPT.fail:(st.result==='pass'?RPT.teal:RPT.pend);
       s.addText('ความผิดปกติ : '+statTxt,{x:x,y:y,w:w,h:H_STAT,fill:{color:statFill},fontFace:RPT_FONT,fontSize:fitSize('ความผิดปกติ : '+statTxt,15),color:'FFFFFF',align:'center',valign:'middle',margin:3});
     };
@@ -1901,20 +1944,20 @@ document.getElementById('btn-export').onclick=async function(){
     if(F&&F.photos&&F.photos.length){
       const s=pptx.addSlide({masterName:'RPT_PAGE'});
       banner(s,F.title+' ประจำเดือน'+month);
-      // ผลตรวจจากแอป: จับคู่จุดด้วยตำแหน่งในหมวดเดียวกัน ไม่เจอหรือยังไม่กด = ถือว่าปกติตามหน้าตรึง
-      const fsi=TPL.findIndex(isFixedCat);
+      // ผลตรวจจากแอปเหมือนการ์ดอื่น (ตารางสรุปกับหน้านี้จึงตรงกันเสมอ) — จับคู่ตามลำดับ: จุดที่ k ↔ รูปที่ k
+      // ไม่จับด้วยชื่อตำแหน่ง เพราะผู้ใช้แก้ชื่อจากการ์ดได้
+      const fsi=fixedSi();
       const n=F.photos.length,gap=n<=3?0.35:0.06,cw=Math.min(4.1,(AREA_W-(n-1)*gap)/n),fx0=X0+(AREA_W-(n*cw+(n-1)*gap))/2;
       for(let k=0;k<n;k++){
         const fp=F.photos[k],x=fx0+k*(cw+gap);let y=Y0;
-        let st={result:'pass'};
-        if(fsi>=0){const pi=TPL[fsi].points.findIndex(q=>(q.location||'').trim()===fp.location);
-          const m=pi>=0?meta[uid(fsi,pi)]:null;if(m&&m.result==='fail')st=m;}
+        const fpt=fsi>=0?TPL[fsi].points[k]:null;
+        const st=fpt?(meta[uid(fsi,k)]||{}):{};
         s.addText(F.label,{x:x,y:y,w:cw,h:H_HEAD,fill:{color:RPT.mint},fontFace:RPT_FONT,fontSize:16,bold:true,color:'000000',align:'center',valign:'middle'});
         y+=H_HEAD;
         s.addShape(pptx.ShapeType.rect,{x:x,y:y,w:cw,h:H_PHOTO,fill:{color:RPT.photoBg},line:{color:RPT.photoBg,width:0}});
         await drawPhoto(s,x,y,cw,fp.img);
         y+=H_PHOTO;
-        const at='พื้นที่ : '+fp.location;
+        const at='พื้นที่ : '+((fpt&&fpt.location)||fp.location);
         s.addText(at,{x:x,y:y,w:cw,h:H_AREA,fill:{color:RPT.mint2},fontFace:RPT_FONT,fontSize:fitSize(at,15),color:'000000',align:'center',valign:'middle',margin:3});
         drawStatus(s,x,y+H_AREA,cw,st);
       }
@@ -2057,6 +2100,7 @@ async function init(){
   setupIO();
   await openDB();
   await loadAll();
+  fixedSi();   // จำ cid ของหมวดหน้าตรึงไว้ก่อนผู้ใช้จะแก้ชื่อหมวดใด ๆ
   render();
   updatePersistBanner();
   persisted=await requestPersist();
