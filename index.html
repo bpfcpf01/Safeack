@@ -1782,6 +1782,8 @@ function fitSize(t,base){const n=String(t).length;return n>60?base-5:n>40?base-4
 // pptxgenjs ประกาศฟอนต์ด้วย charset ของละติน/เกาหลี/จีน — CPF Imm Sook เป็นฟอนต์ไทยแบบเก่าที่พึ่ง charset
 // เครื่องที่ติดตั้งฟอนต์นี้จึงแปลงข้อความไทยผ่าน code page ผิดจนกลายเป็น "√"¬-"∫…" ทั้งไฟล์ (เจอจริงแล้ว)
 // แก้ XML หลังสร้างให้ประกาศแบบเดียวกับแม่แบบของผู้ใช้: latin/cs = charset -34 (Thai), ea = ฟอนต์ธีม
+// และภาษาของข้อความ lang="th-TH" altLang="en-US" — pptxgenjs เขียน en-US ซึ่งพอข้อความไทยยาวจนต้องตัดบรรทัด
+// PowerPoint ตัดคำแบบอังกฤษแล้วข้อความทั้งก้อนกลับไปเพี้ยนอีก (เจอจริงที่การ์ดตำแหน่งยาว FHD-AM-01)
 const FONT_DECL='typeface="'+RPT_FONT+'" panose="00000500000000000000" pitchFamily="2" charset="-34"';
 async function fixThaiFontDecl(blob){
   const Z=window.JSZip;if(!Z)return blob;
@@ -1792,7 +1794,8 @@ async function fixThaiFontDecl(blob){
   const names=Object.keys(zip.files).filter(n=>/^ppt\/(slides|slideMasters|slideLayouts)\/[^/]+\.xml$/.test(n));
   for(const n of names){
     const x=await zip.file(n).async('string');
-    const y=x.replace(reLC,function(m,t){return '<a:'+t+' '+FONT_DECL+'/>';}).replace(reEA,'<a:ea typeface="+mn-ea"/>');
+    const y=x.replace(reLC,function(m,t){return '<a:'+t+' '+FONT_DECL+'/>';}).replace(reEA,'<a:ea typeface="+mn-ea"/>')
+      .replace(/<a:(rPr|endParaRPr|defRPr) lang="en-US"(?! altLang)/g,'<a:$1 lang="th-TH" altLang="en-US"');
     if(y!==x)zip.file(n,y);
   }
   return zip.generateAsync({type:'blob',compression:'DEFLATE'});
