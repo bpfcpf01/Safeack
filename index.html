@@ -86,6 +86,8 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 .searchwrap input{padding-right:42px!important}
 #search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;border-radius:50%;background:var(--panel2);color:var(--mut);font-size:13px;cursor:pointer;display:grid;place-items:center;padding:0;font-family:inherit}
 #search-clear[hidden]{display:none}
+/* .sheet .opt ตั้ง display:flex ซึ่งชนะ [hidden] ของเบราว์เซอร์ — ปุ่ม "ส่งไฟล์" กับกล่องเตือนเลยโผล่ตลอด */
+.sheet .opt[hidden]{display:none}
 #search-clear:active{background:rgba(24,135,68,.12);color:var(--green2)}
 .bar input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:12px 14px;border-radius:12px;font-size:14px;font-family:inherit;box-shadow:0 1px 3px rgba(20,50,30,.05)}
 .bar input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 2px rgba(24,135,68,.18)}
@@ -96,6 +98,8 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 .cathead .ct{font-weight:700;font-size:13.5px;flex:1;color:var(--green2)}
 .cathead .cn{font-size:11px;color:var(--mut);background:var(--panel2);padding:3px 9px;border-radius:20px}
 .cathead .cn-ok{color:#fff;background:var(--pass)}
+.cathead .cn-ph{color:#fff;background:#d9920c}
+.cathead .cn-ph.ok{background:#2563c9}
 .cathead .cn-bad{color:#fff;background:var(--fail)}
 .cathead .chev{color:var(--mut);transition:transform .2s;font-size:12px}
 .cat.collapsed .chev{transform:rotate(-90deg)}
@@ -271,7 +275,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
   <div class="logo">ST</div>
   <div style="flex:1">
     <h1>SafeTrack <span style="color:var(--mut);font-weight:500;font-size:13px">รายงานตรวจอุปกรณ์</span></h1>
-    <div class="sub">EF-SF-002 · ระบบบันทึก + ออกรายงาน PowerPoint</div>
+    <div class="sub"><span data-form-code>EF-SF-002</span> · ระบบบันทึก + ออกรายงาน PowerPoint</div>
   </div>
   <button class="helpbtn" id="btn-help" aria-label="เปิดคู่มือการใช้งาน"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9.6 9.3a2.5 2.5 0 114 2c-.9.7-1.6 1.2-1.6 2.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="currentColor"/></svg>คู่มือ</button>
 </div>
@@ -314,6 +318,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
     </div>
     <div class="row"><button class="opt on" id="opt-autonext"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>เลื่อนไปจุดถัดไปอัตโนมัติ (Auto Next)</button></div>
     <div class="row"><button class="opt" id="opt-onlyphoto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="10" r="1.5" fill="currentColor"/><path d="M21 16l-5-5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>เลือกออกเฉพาะจุดที่มีรูป</button></div>
+    <div class="row"><button class="opt" id="opt-photorange"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span id="photorange-label">รูปตัวอย่างต่อหมวด: 3–5 รูป</span></button></div>
     <div class="row"><button class="opt" id="opt-collapse"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 4h13M8 10h13M8 16h13M3 4l2 2-2 2M3 14l2 2-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>ยุบ / ขยายทุกหมวด</button></div>
     <div class="row"><button class="opt" id="opt-tpl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h10M4 12h7M4 18h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 11v8m-4-4h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>แก้ไขรายการตรวจ (เพิ่ม/ลบ หมวดและจุด)</button></div>
     <div class="row">
@@ -365,7 +370,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
      ฝังไว้ในไฟล์เดียวกันเพราะผู้ใช้เปิดคู่มือตอนยืนอยู่หน้าอุปกรณ์ ซึ่งมักไม่มีสัญญาณ -->
 <div class="guide" id="guide" role="dialog" aria-modal="true" aria-labelledby="guide-title">
   <div class="ghead">
-    <h2 id="guide-title">คู่มือการใช้งาน<span class="gsub">SafeTrack · EF-SF-002 · 28 หมวด รวม 195 จุด</span></h2>
+    <h2 id="guide-title">คู่มือการใช้งาน<span class="gsub">SafeTrack · <span data-form-code>EF-SF-002</span> · <span id="guide-count">8 หมวด รวม 48 จุด</span></span></h2>
     <button class="x" id="guide-close" aria-label="ปิดคู่มือ">✕</button>
   </div>
   <div class="gbody">
@@ -430,7 +435,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
       <summary>④ ค้นหา ตัวกรอง และการยุบหมวด</summary>
       <div class="gc">
         <ul>
-          <li><b>หาอุปกรณ์ตัวหนึ่ง</b> — พิมพ์รหัส ตำแหน่ง หรือประเภทลงช่องค้นหา เช่น <code>A-031</code>, <code>หอพัก</code>, <code>ไฟฉุกเฉิน</code></li>
+          <li><b>หาอุปกรณ์ตัวหนึ่ง</b> — พิมพ์รหัส ตำแหน่ง หรือประเภทลงช่องค้นหา เช่น <code>EL-AM-01</code>, <code>หอพัก</code>, <code>ไฟฉุกเฉิน</code></li>
           <li><b>ดูว่าเหลือจุดไหน</b> — แตะช่อง <span class="k">ยังไม่ตรวจ</span> ด้านบน (ครบแล้วจะขึ้น "ตรวจครบทุกจุดแล้ว 🎉")</li>
           <li><b>ไล่ดูจุดที่ไม่ปกติ</b> ก่อนออกรายงาน — แตะช่อง <span class="k">ไม่ปกติ</span></li>
           <li><b>เลิกกรอง</b> — แตะช่องเดิมซ้ำ หรือแตะช่อง <span class="k">ทั้งหมด</span></li>
@@ -446,7 +451,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
       <summary>⑤ ออกรายงาน PowerPoint</summary>
       <div class="gc">
         <p>กดปุ่มส้ม <span class="k">ออก PowerPoint</span> ด้านล่าง แล้วรอ — ปุ่มจะบอกความคืบหน้า
-          (<code>กำลังสร้าง… 120/195</code>) <b>ห้ามปิดหน้าจอระหว่างนี้</b></p>
+          (<code>กำลังสร้าง… 20/48</code>) <b>ห้ามปิดหน้าจอระหว่างนี้</b></p>
         <p>ไฟล์ที่ได้ชื่อ <code>รายงานอุปกรณ์ฉุกเฉิน-ปปปป-ดด-วว.pptx</code> ประกอบด้วย</p>
         <ol>
           <li><b>สไลด์แรก — ตารางสรุป</b> 1 บรรทัดต่อ 1 ประเภทอุปกรณ์:
@@ -462,7 +467,11 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
         <div class="note-box warn-box">ถ้าขึ้นว่า <b>ส่งไฟล์ไม่สำเร็จ ให้กด "ดาวน์โหลด" ในแผงเดิม</b> —
           ไฟล์ยังอยู่ ไม่ต้องสร้างใหม่ แต่ถ้าเผลอปิดแผงไปแล้วต้องกดสร้างใหม่</div>
         <p style="margin-top:9px">ตัวเลือก <b>"เลือกออกเฉพาะจุดที่มีรูป"</b> ในเมนู <span class="k">⋯</span>
-          จะตัดจุดที่ยังไม่มีรูปออกจากรายงาน เหมาะกับการส่งรายงานระหว่างทาง</p>
+          จะตัดจุดที่ยังไม่มีรูปออกจากรายงาน <b>เปิดไว้เป็นค่าเริ่มต้น</b></p>
+        <p style="margin-top:9px"><b>รูปตัวอย่างหมวดละกี่รูป</b> (เริ่มต้น 3–5 เปลี่ยนได้ที่เมนู <span class="k">⋯</span> → "รูปตัวอย่างต่อหมวด")
+          — ไม่ต้องถ่ายทุกจุด เลือกจุดที่จะใช้นำเสนอแล้วใส่รูปเฉพาะจุดนั้น
+          หัวหมวดบอกจำนวนรูป เช่น <code>📷 4</code> สีฟ้า = อยู่ในจำนวนที่ตั้งไว้ สีส้ม = ยังน้อยหรือเกิน
+          ตอนกดออก PowerPoint แอปจะเตือนหมวดที่รูปยังไม่ครบ (กดออกต่อได้)</p>
       </div>
     </details>
 
@@ -586,7 +595,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
       </div>
     </details>
 
-    <div class="gfoot">SafeTrack · EF-SF-002<br>ปิดคู่มือด้วยปุ่ม ✕ มุมขวาบน</div>
+    <div class="gfoot">SafeTrack · <span data-form-code>EF-SF-002</span><br>ปิดคู่มือด้วยปุ่ม ✕ มุมขวาบน</div>
   </div>
 </div>
 
@@ -599,9 +608,13 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 <input type="file" id="file-camera" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden">
 
 <script>
-window.TEMPLATE_DATA = [{"slide": 1, "category": "ถังดับเพลิงชนิดผงเคมีแห้ง", "points": [{"order": "1", "code": "A-001", "location": "โรงพักขยะ 1"}, {"order": "2", "code": "A-002", "location": "โรงพักขยะ 2"}, {"order": "3", "code": "A-031", "location": "หน้าห้องน้ำชาย ชั้น 2 อาคารสำนักงาน"}, {"order": "4", "code": "A-032", "location": "ทางเดินไปห้องประชุม 2 อาคารสำนักงาน"}, {"order": "5", "code": "A-033", "location": "ชานพักบันไดทางขึ้นหอพัก2"}, {"order": "6", "code": "A-034", "location": "ชั้น 2 หอพัก 2"}, {"order": "7", "code": "A-035", "location": "ชานพักบันไดทางขึ้น หอพัก 1"}, {"order": "8", "code": "A-036", "location": "ชั้น 2 หอพัก 1"}, {"order": "9", "code": "A-037", "location": "หน้าห้องประกอบอาหาร"}, {"order": "10", "code": "A-038", "location": "โรงอาหาร"}, {"order": "11", "code": "", "location": "หน้าห้องพักลูกค้า"}, {"order": "12", "code": "B-004", "location": "หน้าห้องความปลอดภัย ตึกรวมมิตร"}, {"order": "13", "code": "", "location": "โรงสเปรย์น้ำยาฆ่าเชื้อ"}, {"order": "14", "code": "B-005", "location": "หน้าห้องประชุม ตึกเกษมสุข"}, {"order": "15", "code": "C-003", "location": "บันไดทางขึ้นห้องประชุม 1 อาคารสำนักงาน"}, {"order": "16", "code": "C-004", "location": "หน้าห้องผู้จัดการทั่วไป อาคารสำนักงาน"}, {"order": "17", "code": "C-005", "location": "ประตูทางออกฝั่งลานจอดรถศูนย์ TPM"}, {"order": "18", "code": "C-006", "location": "ประตูทางออกฝั่งสนามบอลศูนย์ TPM"}, {"order": "19", "code": "", "location": "จุดจัดเก็บแอลกอฮอล์1"}, {"order": "20", "code": "", "location": "จุดจัดเก็บแอลกอฮอล์2"}]}, {"slide": 2, "category": "ถังดับเพลิงชนิดน้ำยาเหลวระเหย", "points": [{"order": "1", "code": "B-013", "location": "ข้าง อสร.1 ทางขึ้นหลังคา"}]}, {"slide": 3, "category": "ถังดับเพลิงชนิดโฟม", "points": [{"order": "1", "code": "", "location": "ข้างปั๊มน้ำมันดีเซล 1"}, {"order": "2", "code": "", "location": "ข้างปั๊มน้ำมันดีเซล 2"}]}, {"slide": 4, "category": "ไฟฉุกเฉิน", "points": [{"order": "1", "code": "F-010", "location": "โต๊ะเจ้าหน้าที่จัดซื้อ บริเวณตึกรวมมิตร"}, {"order": "2", "code": "F-011", "location": "ห้องพยาบาล บริเวณตึกรวมมิตร"}, {"order": "3", "code": "F-012", "location": "หน้าตึกรวมมิตร"}, {"order": "4", "code": "F-013", "location": "ห้องบัญชีบริเวณอาคารสำนักงาน"}, {"order": "5", "code": "F-014", "location": "หน้าห้องกาแฟบริเวณอาคารสำนักงาน"}, {"order": "6", "code": "F-015", "location": "ในห้องประชุม 1 บริเวณอาคารสำนักงาน"}, {"order": "7", "code": "F-016", "location": "หน้าห้องพักรับรองบริเวณอาคารสำนักงาน"}, {"order": "8", "code": "F-017", "location": "ในห้องประชุม 2บริเวณอาคารสำนักงาน"}, {"order": "9", "code": "F-018", "location": "โต๊ะคุณศศิวิมล ก้อนเงิน บริเวณตึกเกษมสุข"}, {"order": "10", "code": "F-019", "location": "ห้องตาชั่ง บริเวณตึกเกษมสุข"}, {"order": "11", "code": "F-020", "location": "ห้องจัดซื้อวัตถุดิบบริเวณตึกเกษมสุข"}, {"order": "12", "code": "F-021", "location": "ชานพักบันไดทางขึ้น หอพัก 2"}, {"order": "13", "code": "F-022", "location": "ชั้น 2 ตู้ยา หอพัก 1"}, {"order": "14", "code": "F-023", "location": "ประตูทางออกฝั่งลานจอดรถศูนย์ TPM"}, {"order": "15", "code": "F-024", "location": "ประตูทางออกฝั่งสนามบอลศูนย์ TPM"}, {"order": "16", "code": "F-025", "location": "ในห้องประกอบอาหาร"}, {"order": "17", "code": "F-026", "location": "หน้าห้องออกกำลังกาย"}, {"order": "18", "code": "F-027", "location": "ในห้องจัดเก็บอุปกรณ์ผจญเพลิง"}, {"order": "19", "code": "F-028", "location": "ด้านนอกฝั่งซ้ายห้องจัดเก็บอุปกรณ์ผจญเพลิง"}, {"order": "20", "code": "F-029", "location": "ด้านนอกฝั่งขวาห้องจัดเก็บอุปกรณ์ผจญเพลิง"}, {"order": "21", "code": "F-132", "location": "ห้อง TPM ทางเดิน ชั้น 2"}, {"order": "22", "code": "F-133", "location": "ห้อง TPM อบรม 1"}, {"order": "23", "code": "F-134", "location": "ห้อง TPM อบรม 2"}, {"order": "24", "code": "F-135", "location": "หอพักเก่าหน้าห้องเบอร์ 1"}, {"order": "25", "code": "F-136", "location": "หอพักเก่าหน้าห้องเบอร์ 10"}, {"order": "26", "code": "F-137", "location": "หอพักเก่า ชั้น 1"}, {"order": "27", "code": "F-138", "location": "หอพักใหม่ชั้น 1"}, {"order": "28", "code": "F-139", "location": "หอพักใหม่ชั้น 2"}, {"order": "29", "code": "F-140", "location": "ห้องออกกำลังกาย"}, {"order": "30", "code": "F-141", "location": "โรงอาหาร"}]}, {"slide": 5, "category": "ตู้/สายฉีดน้ำดับเพลิง", "points": [{"order": "1", "code": "G-020", "location": "ด้านหน้าโรงงาน จุดหัวรับน้ำดับเพลิง1"}, {"order": "2", "code": "G-021", "location": "ด้านข้างโรงจอดรถตึกบริหาร"}, {"order": "3", "code": "G-022", "location": "ด้านข้างปั๊มลมตึกผลิต2"}, {"order": "4", "code": "G-023", "location": "ชั้น 2 บริเวณหอพัก 1"}, {"order": "5", "code": "G-024", "location": "ด้านข้างรั้ว หลังMeal Silo"}, {"order": "6", "code": "G-025", "location": "ด้านข้างรั้ว หลังโกดัง B1"}]}, {"slide": 6, "category": "HOSE REEL", "points": [{"order": "1", "code": "H-006", "location": "ชานพักบันไดทางขึ้นห้องประชุม 1"}]}, {"slide": 7, "category": "อ่างล้างตาฉุกเฉิน", "points": [{"order": "1", "code": "K-005", "location": "ข้างโรงสเปรย์น้ำยา"}, {"order": "2", "code": "", "location": "ข้างจุดเก็บแอลกอฮอล์"}]}, {"slide": 8, "category": "ขวดล้างตาฉุกเฉิน", "points": [{"order": "1", "code": "", "location": "โรงพักขยะ"}, {"order": "2", "code": "", "location": "โกดัง K3 ประตู 8"}]}, {"slide": 9, "category": "สัญญาณแจ้งเหตุฉุกเฉิน", "points": [{"order": "1", "code": "L-024", "location": "ประตูด้านหน้าศูนย์ TPM"}, {"order": "2", "code": "L-025", "location": "หอพัก 1 ชั้น 2"}, {"order": "3", "code": "L-026", "location": "หน้าตึกเกษมสุข"}, {"order": "4", "code": "L-027", "location": "หน้าห้องน้ำชั้นล่าง อาคารสำนักงาน"}, {"order": "5", "code": "L-047", "location": "ตึกรวมมิตร"}, {"order": "6", "code": "", "location": "โรงอาหารใหม่"}, {"order": "7", "code": "", "location": "โรงอาหารเก่า"}, {"order": "8", "code": "", "location": "ห้องเก็บเอกสารบัญชี"}, {"order": "9", "code": "", "location": "หอพัก 1 ชั้น 1"}, {"order": "10", "code": "", "location": "หอพัก 2 ชั้น 1"}, {"order": "11", "code": "", "location": "หอพัก 2 ชั้น 2"}, {"order": "12", "code": "", "location": "หน้าหน้าออกกำลังกาย"}, {"order": "13", "code": "", "location": "หน้าห้องญี่ปุ่น"}, {"order": "14", "code": "", "location": "ข้างห้องเก็บของหลังโกดัง K3"}, {"order": "15", "code": "", "location": "โรงพักขยะ"}, {"order": "16", "code": "", "location": "ทางขึ้นห้องโปรแกรม"}, {"order": "17", "code": "", "location": "ประตูด้านหลังศูนย์ TPM"}]}, {"slide": 10, "category": "Smoke Detector  ห้องโรงอาหารใหม่", "points": [{"order": "1", "code": "M-001", "location": "ห้องรับประทานอาหาร#1"}, {"order": "2", "code": "M-002", "location": "ห้องรับประทานอาหาร#2"}]}, {"slide": 11, "category": "Smoke Detector  ห้องโรงอาหารเก่า", "points": [{"order": "1", "code": "M-003", "location": "ห้องพักลูกค้า #1"}, {"order": "2", "code": "M-004", "location": "ห้องพักลูกค้า #2"}]}, {"slide": 12, "category": "Smoke Detector  ตึกรวมมิตร", "points": [{"order": "1", "code": "M-005", "location": "แจ้งคิว"}, {"order": "2", "code": "M-006", "location": "รับแขก"}, {"order": "3", "code": "M-007", "location": "จัดซื้อฯ"}, {"order": "4", "code": "M-008", "location": "ห้องพยาบาล"}, {"order": "5", "code": "M-009", "location": "ร้านค้า"}, {"order": "6", "code": "M-010", "location": "ห้องเก็บของ"}, {"order": "7", "code": "M-011", "location": "ห้องธุรการ"}, {"order": "8", "code": "M-012", "location": "ห้องบุคคล"}, {"order": "9", "code": "M-013", "location": "ทางเดินไปห้องน้ำ"}, {"order": "10", "code": "M-014", "location": "ห้อง จป."}, {"order": "11", "code": "M-015", "location": "ห้องชุมสาย"}]}, {"slide": 13, "category": "Smoke Detector  ศูนย์พัฒนาคน TPM ชั้น 1", "points": [{"order": "1", "code": "M-016", "location": "ห้องสอนงาน#1"}, {"order": "2", "code": "M-017", "location": "ห้องสอนงาน#2"}, {"order": "3", "code": "M-018", "location": "ห้องสอนงาน#3"}]}, {"slide": 14, "category": "Smoke Detector  ศูนย์พัฒนาคน TPM ชั้น 2", "points": [{"order": "1", "code": "M-019", "location": "ห้องวอร์รูม#1"}, {"order": "2", "code": "M-020", "location": "ห้องวอร์รูม#2"}, {"order": "3", "code": "M-021", "location": "ห้องวอร์รูม#3"}]}, {"slide": 15, "category": "Smoke Detector  โกดังเก็บของหลังโกดัง K3", "points": [{"order": "1", "code": "M-022", "location": "ตัวที่ 1"}, {"order": "2", "code": "M-023", "location": "ตัวที่ 2"}]}, {"slide": 16, "category": "Smoke Detector  ตึกเกษมสุข", "points": [{"order": "1", "code": "M-024", "location": "ห้องครัว"}, {"order": "2", "code": "M-025", "location": "ห้องประชุม"}, {"order": "3", "code": "M-026", "location": "โถง #1"}, {"order": "4", "code": "M-027", "location": "โถง #2"}, {"order": "5", "code": "M-028", "location": "โถง #3"}, {"order": "6", "code": "M-029", "location": "ห้องตาชั่ง"}, {"order": "7", "code": "M-030", "location": "ห้องเปิดใบรับ"}, {"order": "8", "code": "M-031", "location": "ห้องจัดซื้อวัตถุดิบ"}]}, {"slide": 17, "category": "Smoke Detector  ตึกบริหารชั้น 1", "points": [{"order": "1", "code": "M-032", "location": "หน้าห้องน้ำ"}, {"order": "2", "code": "M-033", "location": "โถง#1"}, {"order": "3", "code": "M-034", "location": "โถง#2"}, {"order": "4", "code": "M-035", "location": "บัญชี"}, {"order": "5", "code": "M-036", "location": "ห้องบัญชี"}, {"order": "6", "code": "M-037", "location": "ห้อง GM"}, {"order": "7", "code": "M-038", "location": "ห้อง DC Server"}, {"order": "8", "code": "M-039", "location": "ห้อง AVP"}]}, {"slide": 18, "category": "Smoke Detector  ตึกบริหาร ชั้น 2", "points": [{"order": "1", "code": "M-040", "location": "ห้องเตรียมเครื่องดื่ม"}, {"order": "2", "code": "M-041", "location": "หน้าห้องประชุม 1"}, {"order": "3", "code": "M-042", "location": "ห้องประชุม 1 #1"}, {"order": "4", "code": "M-043", "location": "ห้องประชุม 1 #2"}, {"order": "5", "code": "M-044", "location": "ห้องประชุม 1 #3"}, {"order": "6", "code": "M-045", "location": "ห้องนอน AVP"}, {"order": "7", "code": "M-046", "location": "ทางเดิน #1"}, {"order": "8", "code": "M-047", "location": "ทางเดิน #2"}, {"order": "9", "code": "M-048", "location": "ห้องประชุม2 #1"}, {"order": "10", "code": "M-049", "location": "ห้องประชุม2 #2"}, {"order": "11", "code": "M-050", "location": "ห้องประชุม2 #3"}, {"order": "12", "code": "M-051", "location": "ห้อง CSR"}, {"order": "13", "code": "M-052", "location": "ห้องสารบรรณฯ"}, {"order": "14", "code": "M-053", "location": "ห้องเก็บของธุรการ"}]}, {"slide": 19, "category": "Smoke Detector  หอพักเก่า ชั้น 1", "points": [{"order": "1", "code": "M-054", "location": "ห้องเบอร์#11"}, {"order": "2", "code": "M-055", "location": "ห้องเบอร์#11"}, {"order": "3", "code": "M-056", "location": "ห้องเบอร์#12"}, {"order": "4", "code": "M-057", "location": "ห้องเบอร์#13"}, {"order": "5", "code": "M-058", "location": "ห้องเบอร์#14"}, {"order": "6", "code": "M-059", "location": "ห้องเบอร์#15"}, {"order": "7", "code": "M-060", "location": "ห้องเบอร์#16"}, {"order": "8", "code": "M-061", "location": "ห้องเบอร์#17"}, {"order": "9", "code": "M-062", "location": "ห้องเบอร์#18"}, {"order": "10", "code": "M-063", "location": "ห้องเบอร์#19"}, {"order": "11", "code": "M-064", "location": "ห้องเบอร์#19"}, {"order": "12", "code": "M-065", "location": "ห้องเก็บของข้างห้องน้ำ"}]}, {"slide": 20, "category": "Smoke Detector  หอพักเก่า ชั้น 2", "points": [{"order": "1", "code": "M-066", "location": "ห้องเบอร์#1"}, {"order": "2", "code": "M-067", "location": "ห้องเบอร์#2"}, {"order": "3", "code": "M-068", "location": "ห้องเบอร์#3"}, {"order": "4", "code": "M-069", "location": "ห้องเบอร์#4"}, {"order": "5", "code": "M-070", "location": "ห้องเบอร์#5"}, {"order": "6", "code": "M-071", "location": "ห้องเบอร์#6"}, {"order": "7", "code": "M-072", "location": "ห้องเบอร์#7"}, {"order": "8", "code": "M-073", "location": "ห้องเบอร์#8"}, {"order": "9", "code": "M-074", "location": "ห้องเบอร์#9"}, {"order": "10", "code": "M-075", "location": "ห้องเบอร์#10"}]}, {"slide": 21, "category": "Smoke Detector  หอพักใหม่", "points": [{"order": "1", "code": "M-076", "location": "ห้องเบอร์#1"}, {"order": "2", "code": "M-077", "location": "ห้องเบอร์#2"}, {"order": "3", "code": "M-078", "location": "ห้องเบอร์#3"}, {"order": "4", "code": "M-079", "location": "ห้องเบอร์#4"}, {"order": "5", "code": "M-080", "location": "ห้องเบอร์#5"}, {"order": "6", "code": "M-081", "location": "ห้องเบอร์#6"}]}, {"slide": 22, "category": "Smoke Detector  ห้องเก็บเอกสาร", "points": [{"order": "1", "code": "M-082", "location": "ห้องเก็บของบัญชี"}, {"order": "2", "code": "M-083", "location": "ห้องเก็บของหน้าร้าน"}]}, {"slide": 23, "category": "Smoke Detector  ห้องออกกำลังกาย", "points": [{"order": "1", "code": "M-084", "location": "ห้องกำลังกาย"}]}, {"slide": 24, "category": "Smoke Detector  ห้องญี่ปุ่น", "points": [{"order": "1", "code": "M-085", "location": "ห้องญี่ปุ่น"}]}, {"slide": 25, "category": "Heat Detector โรงอาหารใหม่", "points": [{"order": "1", "code": "N-001", "location": "ร้านข้าว"}, {"order": "2", "code": "N-002", "location": "ร้านก๋วยเตี๋ยว"}]}, {"slide": 26, "category": "Smoke Detector  โรงพักขยะ", "points": [{"order": "1", "code": "N-003", "location": "ห้องขยะทั่วไป"}, {"order": "2", "code": "N-004", "location": "ห้องขยะรีไซเคิล"}, {"order": "3", "code": "N-005", "location": "ห้องขยะรีไซเคิล"}, {"order": "4", "code": "N-006", "location": "ห้องขยะอันตราย"}, {"order": "5", "code": "N-007", "location": "ห้องขยะอันตราย"}]}, {"slide": 27, "category": "Heat Detector ห้องครัว", "points": [{"order": "1", "code": "N-008", "location": "ห้องครัว"}]}, {"slide": 28, "category": "ป้ายทางออกฉุกเฉิน", "points": [{"order": "1", "code": "Q-001", "location": "ประตูทางออกบ่อปลา อาคารสำนักงาน"}, {"order": "2", "code": "Q-002", "location": "คานทางลงบันได อาคารสำนักงาน"}, {"order": "3", "code": "Q-003", "location": "ประตูทางออกฝั่งห้องน้ำ"}, {"order": "4", "code": "Q-004", "location": "ประตูทางออกห้องประชุม 2"}, {"order": "5", "code": "Q-005", "location": "ประตูทางออกห้องประชุม 1"}, {"order": "6", "code": "Q-006", "location": "เพดานหน้าห้องน้ำหญิง ชั้น 2"}, {"order": "7", "code": "Q-007", "location": "ประตูทางออก ตึกรวมมิตร"}, {"order": "8", "code": "Q-008", "location": "ประตูทางออกห้องพยาบาล"}, {"order": "9", "code": "Q-009", "location": "ประตูทางออกห้องจัดซื้อวัตถุดิบ"}, {"order": "10", "code": "Q-010", "location": "ประตูทางออกห้องตาชั่ง"}, {"order": "11", "code": "Q-011", "location": "ประตูทางออกตึกเกษมสุข"}, {"order": "12", "code": "Q-012", "location": "ประตูทางออกโรงอาหาร"}, {"order": "13", "code": "Q-013", "location": "ประตูทางออกศูนย์ TPM ฝั่งลานจอดรถ"}, {"order": "14", "code": "Q-014", "location": "ประตูทางออกศูนย์ TPM ฝั่งสนามบอล"}, {"order": "15", "code": "Q-015", "location": "ประตูทางออกห้อง WALL ROOM"}, {"order": "16", "code": "Q-016", "location": "หอพัก 1 ชั้น 1"}, {"order": "17", "code": "Q-017", "location": "หอพัก 1 ชั้น 1"}, {"order": "18", "code": "Q-019", "location": "หอพัก 1 ชั้น 2"}, {"order": "19", "code": "Q-020", "location": "หอพัก 1 ชั้น 2"}, {"order": "20", "code": "Q-021", "location": "หอพัก 2 ชั้น 2"}, {"order": "21", "code": "", "location": "หอพัก 2 ชั้น 2"}]}];
+window.TEMPLATE_DATA = [{"slide": 1, "category": "ไฟฉุกเฉิน", "points": [{"order": "1", "code": "EL-AM-01", "location": "หน้าป้อม รปภ."}, {"order": "2", "code": "EL-AM-04", "location": "อาคารสำนักงาน"}, {"order": "3", "code": "EL-AM-20", "location": "หอพัก 1"}, {"order": "4", "code": "EL-AM-21", "location": "หอพัก 2"}, {"order": "5", "code": "EL-AM-22", "location": "หอพัก 3"}, {"order": "6", "code": "EL-AM-23", "location": "หอพัก 4"}, {"order": "7", "code": "EL-AM-24", "location": "หอพัก 5"}]}, {"slide": 2, "category": "ป้ายทางออกฉุกเฉิน", "points": [{"order": "1", "code": "EE-AM-08", "location": "โรงอาหาร"}, {"order": "2", "code": "EE-AM-09", "location": "อาคารสำนักงาน"}, {"order": "3", "code": "EE-AM-10", "location": "หอพัก 1"}, {"order": "4", "code": "EE-AM-11", "location": "หอพัก 2"}, {"order": "5", "code": "EE-AM-12", "location": "หอพัก 3"}, {"order": "6", "code": "EE-AM-13", "location": "หอพัก 4"}, {"order": "7", "code": "EE-AM-14", "location": "หอพัก 5"}, {"order": "8", "code": "EE-AM-28", "location": "โรงอาหาร"}, {"order": "9", "code": "EE-AM-29", "location": "ศูนย์การเรียนรู้"}]}, {"slide": 3, "category": "หัวรับน้ำดับเพลิง", "points": [{"order": "1", "code": "FDC-AM-01", "location": "หน้าโรงอาหาร"}, {"order": "2", "code": "FDC-AM-02", "location": "แนวรั้วหน้าโรงงาน"}]}, {"slide": 4, "category": "ตู้/สายฉีดน้ำดับเพลิง", "points": [{"order": "1", "code": "FHD-AM-01", "location": "แนวรั้วหน้าโรงงาน โรงเก็บตัวอย่าง"}, {"order": "2", "code": "FHD-AM-02", "location": "แนวรั้วหลังโกดัง B1"}, {"order": "3", "code": "FHD-AM-05", "location": "แนวรั้วข้างโกดังวิศวกรรมกลาง"}, {"order": "4", "code": "FHD-AM-06", "location": "หน้าถังเก็บน้ำดับเพลิง"}, {"order": "5", "code": "FHD-AM-08", "location": "แนวรั้วด้านหลังอาคารศูนย์ประชุมใหญ่ด้านหลัง"}, {"order": "6", "code": "FHD-AM-09", "location": "แนวรั้วฝั่งชุมชนวัดหนองรี อาคารศูนย์ประชุมใหญ่ด้านหลัง"}, {"order": "7", "code": "FHD-AM-10", "location": "แนวรั้วฝั่งชุมชนวัดหนองรี อาคารศูนย์ประชุมใหญ่ด้านหลัง"}, {"order": "8", "code": "FHD-AM-11", "location": "แนวรั้วหลังเครื่องสูบน้ำหอพัก"}, {"order": "9", "code": "FHD-AM-12", "location": "แนวรั้วฝั่งชุมชนวัดหนองรี ข้างหอพัก 1"}, {"order": "10", "code": "FHD-AM-13", "location": "ข้างห้องน้ำลานจอดรถหอพัก"}, {"order": "11", "code": "FHD-AM-14", "location": "แนวรั้วข้างห้อง Trio ฝั่งชุมชนวัดหนองรี"}, {"order": "12", "code": "FHD-AM-15", "location": "ข้างโรงอาหาร"}, {"order": "13", "code": "FHD-AM-16", "location": "แนวรั้วข้างอาคารสำนักงาน ฝั่งชุมชนวัดหนองรี"}, {"order": "14", "code": "FHD-AM-17", "location": "หลังห้องน้ำ ชั้น 1 อาคารสำนักงาน"}]}, {"slide": 5, "category": "ฝักบัวและอ่างล้างตาฉุกเฉิน", "points": [{"order": "1", "code": "SEW-AM-01", "location": "จุดจัดเก็บออมนิไซด์"}]}, {"slide": 6, "category": "ปริมาณทรายในถัง", "points": [{"order": "1", "code": "", "location": "จุดจัดเก็บออมนิไซด์"}]}, {"slide": 7, "category": "สัญญาณแจ้งเหตุฉุกเฉิน", "points": [{"order": "1", "code": "M-AM-01", "location": "โรงอาหาร"}, {"order": "2", "code": "M-AM-02", "location": "อาคารสำนักงาน"}, {"order": "3", "code": "M-AM-03", "location": "หอพัก 1"}, {"order": "4", "code": "M-AM-04", "location": "หอพัก 2"}, {"order": "5", "code": "M-AM-05", "location": "หอพัก 3"}, {"order": "6", "code": "M-AM-06", "location": "หอพัก 4"}, {"order": "7", "code": "M-AM-07", "location": "หอพัก 5"}, {"order": "8", "code": "M-AM-08", "location": "โรงอาหาร"}, {"order": "9", "code": "M-AM-09", "location": "ศูนย์การเรียนรู้"}]}, {"slide": 8, "category": "สายกราวตู้น้ำดื่ม", "points": [{"order": "1", "code": "", "location": "อาคารสำนักงานชั้น 1"}, {"order": "2", "code": "", "location": "ป้อม รปภ."}, {"order": "3", "code": "", "location": "ห้องแจ้งคิว"}, {"order": "4", "code": "", "location": "ศูนย์การเรียนรู้"}, {"order": "5", "code": "", "location": "อาคารสำนักงาน"}]}];
 </script>
 <script>
+// รหัสแบบฟอร์มที่โชว์บนหัวแอป คู่มือ และสไลด์สรุป — เปลี่ยนที่นี่ที่เดียว
+// (คนละเรื่องกับ 'ef002' ในคีย์ storage / ไฟล์สำรองด้านล่าง ซึ่งห้ามเปลี่ยน ไม่งั้นข้อมูลเดิมหาย)
+const FORM_CODE='EF-SF-002';
+document.querySelectorAll('[data-form-code]').forEach(function(el){el.textContent=FORM_CODE;});
 const META_KEY='safetrack_ef002_meta_v2'; // small metadata only (result/note)
 const OLD_KEY='safetrack_ef002_v1';        // legacy combined blob (state+photos) — migrated away
 const SETT_KEY='safetrack_ef002_sett_v1';  // ui settings
@@ -678,7 +691,11 @@ const photoKeys=new Set();  // uid ที่ "มีรูป" — แหล่�
 const photoBlob={};     // uid -> Blob — โหมด fallback (ไม่มี IDB) หรือ cache ชั่วคราวรอแสดงผล
 const photoURL={};      // uid -> object URL ที่ยังมีชีวิต (จำกัดจำนวนด้วย LRU)
 let orphanPhotoKeys=[]; // stable id ของรูปใน IDB ที่ template ไม่รู้จักแล้ว
-let onlyPhotoExport=false;
+// ที่ใหม่ผู้ตรวจเลือกถ่ายรูปเองหมวดละ PHOTO_MIN–PHOTO_MAX รูปเป็นตัวอย่าง ไม่ใช่ทุกจุด
+// รายงานจึงออกเฉพาะจุดที่มีรูปเป็นค่าเริ่มต้น (ปิดได้ในเมนู ⋯)
+// ตั้งเองได้จากเมนู ⋯ (เก็บใน settings)
+let PHOTO_MIN=3, PHOTO_MAX=5;
+let onlyPhotoExport=true;
 let activeFilter='all'; // all | pending | pass | fail
 let autoNext=true;      // jump to next point after marking result
 const collapsedCats=new Set();  // cid ของหมวดที่ถูกยุบ — ใช้ cid ไม่ใช้ดัชนี เพราะดัชนีเลื่อนได้เมื่อสลับ/ลบหมวด
@@ -844,8 +861,8 @@ function saveMeta(){
 let _metaT=null;
 function saveMetaSoon(){clearTimeout(_metaT);_metaT=setTimeout(function(){_metaT=null;saveMeta();},400);}
 function flushMeta(){if(_metaT){clearTimeout(_metaT);_metaT=null;saveMeta();}}
-function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats]}));}
-function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});}catch(e){}}
+function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats],photoMin:PHOTO_MIN,photoMax:PHOTO_MAX}));}
+function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(Number.isInteger(s.photoMin)&&Number.isInteger(s.photoMax)&&s.photoMin>=1&&s.photoMin<=s.photoMax){PHOTO_MIN=s.photoMin;PHOTO_MAX=s.photoMax;}if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});}catch(e){}}
 
 // ---- photo ops ----
 // รูปทั้งชุดคือ ~40–80MB จึงถือ object URL ไว้แค่ไม่กี่ใบ แล้วโหลดที่เหลือจาก IDB เมื่อเลื่อนถึง
@@ -1016,12 +1033,17 @@ function toastAction(m,label,fn,ms){
 
 const CAM_SVG='<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 8a2 2 0 012-2h2l1.5-2h7L18 6h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="#5a6878" stroke-width="1.6"/><circle cx="12" cy="12.5" r="3.2" stroke="#5a6878" stroke-width="1.6"/></svg>';
 
+function catPhotoCount(si){let n=0;TPL[si].points.forEach((p,pi)=>{if(photoKeys.has(uid(si,pi)))n++;});return n;}
+// หมวดที่มีจุดน้อยกว่า PHOTO_MIN ถ่ายครบทุกจุดก็ถือว่าพอ
+function photoCountOK(si,n){return n>=Math.min(PHOTO_MIN,TPL[si].points.length)&&n<=PHOTO_MAX;}
 function catHeadHTML(si){
   const cat=TPL[si];let cOk=0,cBad=0;
   cat.points.forEach((p,pi)=>{const st=meta[uid(si,pi)]||{};if(st.result==='pass')cOk++;else if(st.result==='fail')cBad++;});
   const okPill=cOk>0?('<span class="cn cn-ok">ปกติ '+cOk+'</span>'):'';
   const badPill=cBad>0?('<span class="cn cn-bad">ไม่ปกติ '+cBad+'</span>'):'';
-  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
+  const nPh=catPhotoCount(si);
+  const phPill=nPh>0?('<span class="cn cn-ph'+(photoCountOK(si,nPh)?' ok':'')+'">📷 '+nPh+'</span>'):'';
+  return '<span class="chev">▼</span><span class="ct">'+esc(cat.category)+'</span>'+phPill+okPill+badPill+'<span class="cn">'+cat.points.length+' จุด</span>';
 }
 function cardHTML(si,pi){
   const id=uid(si,pi);const p=TPL[si].points[pi];const st=meta[id]||{};
@@ -1089,6 +1111,7 @@ function rerenderCard(id){
   if(io)io.unobserve(ph);
   const cd=cardHTML(+m[1],+m[2]);card.className=cd.cls;card.innerHTML=cd.inner;
   observeCards(card);
+  refreshCatHead(+m[1]);   // ตัวนับรูป 📷 บนหัวหมวด
   return true;
 }
 function refreshCatHead(si){const h=document.querySelector('.cat[data-si="'+si+'"] .cathead');if(h)h.innerHTML=catHeadHTML(si);}
@@ -1292,6 +1315,8 @@ let guideScrollY=0;
 function openGuide(){
   sheet.classList.remove('show');
   guideScrollY=window.scrollY;
+  let n=0;TPL.forEach(function(c){n+=c.points.length;});
+  document.getElementById('guide-count').textContent=TPL.length+' หมวด รวม '+n+' จุด';
   guideEl.classList.add('show');
   guideEl.scrollTop=0;
   document.body.style.overflow='hidden';
@@ -1341,6 +1366,18 @@ document.getElementById('opt-collapse').onclick=()=>{
 };
 document.getElementById('opt-autonext').onclick=function(){autoNext=!autoNext;this.classList.toggle('on',autoNext);saveSettings();toast(autoNext?'เปิด Auto Next':'ปิด Auto Next');};
 document.getElementById('opt-onlyphoto').onclick=function(){onlyPhotoExport=!onlyPhotoExport;this.classList.toggle('on',onlyPhotoExport);saveSettings();toast(onlyPhotoExport?'จะออกเฉพาะจุดที่มีรูป':'จะออกทุกจุด');};
+function rangeText(){return PHOTO_MIN===PHOTO_MAX?(PHOTO_MIN+' รูป'):(PHOTO_MIN+'–'+PHOTO_MAX+' รูป');}
+function syncPhotoRange(){document.getElementById('photorange-label').textContent='รูปตัวอย่างต่อหมวด: '+rangeText();}
+document.getElementById('opt-photorange').onclick=function(){
+  const v=prompt('จำนวนรูปตัวอย่างต่อหมวด\nพิมพ์เป็นช่วง เช่น 3-5 หรือตัวเลขเดียว เช่น 4',PHOTO_MIN===PHOTO_MAX?String(PHOTO_MIN):(PHOTO_MIN+'-'+PHOTO_MAX));
+  if(v===null)return;
+  const m=/^\s*(\d+)\s*(?:[-–ถึง]+\s*(\d+))?\s*$/.exec(v);
+  const a=m?+m[1]:0,b=m?(m[2]?+m[2]:a):0;
+  if(!m||a<1||b<a||b>99){toast('รูปแบบไม่ถูกต้อง — เช่น 3-5 หรือ 4');return;}
+  PHOTO_MIN=a;PHOTO_MAX=b;saveSettings();syncPhotoRange();
+  TPL.forEach((c,si)=>refreshCatHead(si));
+  toast('ตั้งรูปตัวอย่างหมวดละ '+rangeText()+' แล้ว');
+};
 document.getElementById('opt-clear').onclick=()=>{if(confirm('ล้างข้อมูลและรูปทั้งหมด?')){clearAll(false);sheet.classList.remove('show');}};
 // สำรองเป็น ZIP: รูปเก็บเป็น JPEG ดิบ (ไม่ผ่าน base64) และฝั่งกู้คืนอ่านทีละ entry ได้
 document.getElementById('opt-backup').onclick=async function(){
@@ -1659,6 +1696,14 @@ tplsheet.addEventListener('click',function(e){
 
 // ====== EXPORT POWERPOINT ======
 document.getElementById('btn-export').onclick=async function(){
+  if(onlyPhotoExport){
+    // เตือนก่อนสร้าง (ใช้เวลานาน) ว่าหมวดไหนรูปไม่ถึง/เกินที่กำหนด — เตือนเท่านั้น ไม่บังคับ
+    const off=[];
+    TPL.forEach((c,si)=>{const n=catPhotoCount(si);if(!photoCountOK(si,n))off.push('• '+c.category+' — '+n+' รูป');});
+    if(off.length&&!confirm('หมวดที่รูปไม่อยู่ในช่วง '+PHOTO_MIN+'–'+PHOTO_MAX+' รูป ('+off.length+' หมวด):\n'+
+        off.slice(0,12).join('\n')+(off.length>12?'\n…และอีก '+(off.length-12)+' หมวด':'')+
+        '\n\nหมวดที่ไม่มีรูปจะไม่มีสไลด์รูป (ยังอยู่ในตารางสรุป)\nออกรายงานต่อไหม?'))return;
+  }
   const btn=this;btn.disabled=true;const orig=btn.innerHTML;btn.innerHTML='กำลังสร้าง…';
   try{
     btn.innerHTML='กำลังโหลด…';
@@ -1682,7 +1727,7 @@ document.getElementById('btn-export').onclick=async function(){
     const sum=pptx.addSlide();
     sum.background={color:'FFFFFF'};
     sum.addText('รายงานผลการดำเนินงานงานหน่วยงาน',{x:0.44,y:0.10,w:12.45,h:0.55,fontSize:24,bold:true,align:'center',color:'1a212b',fontFace:'Angsana New'});
-    sum.addText('สรุปผลการตรวจสอบอุปกรณ์ความปลอดภัยและอุปกรณ์ฉุกเฉิน (EF-SF-002)',{x:0.44,y:0.72,w:12.45,h:0.6,fontSize:22,bold:true,align:'center',color:'c0392b',fontFace:'Angsana New'});
+    sum.addText('สรุปผลการตรวจสอบอุปกรณ์ความปลอดภัยและอุปกรณ์ฉุกเฉิน ('+FORM_CODE+')',{x:0.44,y:0.72,w:12.45,h:0.6,fontSize:22,bold:true,align:'center',color:'c0392b',fontFace:'Angsana New'});
 
     // build rows: one per category, count ปกติ/ไม่ปกติ, collect ไม่ปกติ notes
     const headFill={color:'FF0000'};
@@ -1866,6 +1911,7 @@ async function init(){
   syncTopbarHeight();syncSearchClear();
   document.getElementById('opt-autonext').classList.toggle('on',autoNext);
   document.getElementById('opt-onlyphoto').classList.toggle('on',onlyPhotoExport);
+  syncPhotoRange();
   setupIO();
   await openDB();
   await loadAll();
