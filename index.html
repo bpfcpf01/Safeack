@@ -86,6 +86,8 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
 .searchwrap input{padding-right:42px!important}
 #search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;border-radius:50%;background:var(--panel2);color:var(--mut);font-size:13px;cursor:pointer;display:grid;place-items:center;padding:0;font-family:inherit}
 #search-clear[hidden]{display:none}
+/* .sheet .opt ตั้ง display:flex ซึ่งชนะ [hidden] ของเบราว์เซอร์ — ปุ่ม "ส่งไฟล์" กับกล่องเตือนเลยโผล่ตลอด */
+.sheet .opt[hidden]{display:none}
 #search-clear:active{background:rgba(24,135,68,.12);color:var(--green2)}
 .bar input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:12px 14px;border-radius:12px;font-size:14px;font-family:inherit;box-shadow:0 1px 3px rgba(20,50,30,.05)}
 .bar input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 2px rgba(24,135,68,.18)}
@@ -316,6 +318,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
     </div>
     <div class="row"><button class="opt on" id="opt-autonext"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>เลื่อนไปจุดถัดไปอัตโนมัติ (Auto Next)</button></div>
     <div class="row"><button class="opt" id="opt-onlyphoto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="10" r="1.5" fill="currentColor"/><path d="M21 16l-5-5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>เลือกออกเฉพาะจุดที่มีรูป</button></div>
+    <div class="row"><button class="opt" id="opt-photorange"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span id="photorange-label">รูปตัวอย่างต่อหมวด: 3–5 รูป</span></button></div>
     <div class="row"><button class="opt" id="opt-collapse"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 4h13M8 10h13M8 16h13M3 4l2 2-2 2M3 14l2 2-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>ยุบ / ขยายทุกหมวด</button></div>
     <div class="row"><button class="opt" id="opt-tpl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h10M4 12h7M4 18h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 11v8m-4-4h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>แก้ไขรายการตรวจ (เพิ่ม/ลบ หมวดและจุด)</button></div>
     <div class="row">
@@ -465,8 +468,9 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
           ไฟล์ยังอยู่ ไม่ต้องสร้างใหม่ แต่ถ้าเผลอปิดแผงไปแล้วต้องกดสร้างใหม่</div>
         <p style="margin-top:9px">ตัวเลือก <b>"เลือกออกเฉพาะจุดที่มีรูป"</b> ในเมนู <span class="k">⋯</span>
           จะตัดจุดที่ยังไม่มีรูปออกจากรายงาน <b>เปิดไว้เป็นค่าเริ่มต้น</b></p>
-        <p style="margin-top:9px"><b>รูปตัวอย่างหมวดละ 3–5 รูป</b> — ไม่ต้องถ่ายทุกจุด เลือกจุดที่จะใช้นำเสนอแล้วใส่รูปเฉพาะจุดนั้น
-          หัวหมวดบอกจำนวนรูป เช่น <code>📷 4</code> สีฟ้า = ครบแล้ว สีส้ม = ยังน้อยหรือเกิน
+        <p style="margin-top:9px"><b>รูปตัวอย่างหมวดละกี่รูป</b> (เริ่มต้น 3–5 เปลี่ยนได้ที่เมนู <span class="k">⋯</span> → "รูปตัวอย่างต่อหมวด")
+          — ไม่ต้องถ่ายทุกจุด เลือกจุดที่จะใช้นำเสนอแล้วใส่รูปเฉพาะจุดนั้น
+          หัวหมวดบอกจำนวนรูป เช่น <code>📷 4</code> สีฟ้า = อยู่ในจำนวนที่ตั้งไว้ สีส้ม = ยังน้อยหรือเกิน
           ตอนกดออก PowerPoint แอปจะเตือนหมวดที่รูปยังไม่ครบ (กดออกต่อได้)</p>
       </div>
     </details>
@@ -689,7 +693,8 @@ const photoURL={};      // uid -> object URL ที่ยังมีชีว�
 let orphanPhotoKeys=[]; // stable id ของรูปใน IDB ที่ template ไม่รู้จักแล้ว
 // ที่ใหม่ผู้ตรวจเลือกถ่ายรูปเองหมวดละ PHOTO_MIN–PHOTO_MAX รูปเป็นตัวอย่าง ไม่ใช่ทุกจุด
 // รายงานจึงออกเฉพาะจุดที่มีรูปเป็นค่าเริ่มต้น (ปิดได้ในเมนู ⋯)
-const PHOTO_MIN=3, PHOTO_MAX=5;
+// ตั้งเองได้จากเมนู ⋯ (เก็บใน settings)
+let PHOTO_MIN=3, PHOTO_MAX=5;
 let onlyPhotoExport=true;
 let activeFilter='all'; // all | pending | pass | fail
 let autoNext=true;      // jump to next point after marking result
@@ -856,8 +861,8 @@ function saveMeta(){
 let _metaT=null;
 function saveMetaSoon(){clearTimeout(_metaT);_metaT=setTimeout(function(){_metaT=null;saveMeta();},400);}
 function flushMeta(){if(_metaT){clearTimeout(_metaT);_metaT=null;saveMeta();}}
-function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats]}));}
-function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});}catch(e){}}
+function saveSettings(){lsSet(SETT_KEY,JSON.stringify({autoNext:autoNext,onlyPhoto:onlyPhotoExport,filter:activeFilter,collapsed:[...collapsedCats],photoMin:PHOTO_MIN,photoMax:PHOTO_MAX}));}
+function loadSettings(){try{const s=JSON.parse(lsGet(SETT_KEY)||'{}');if(typeof s.autoNext==='boolean')autoNext=s.autoNext;if(typeof s.onlyPhoto==='boolean')onlyPhotoExport=s.onlyPhoto;if(Number.isInteger(s.photoMin)&&Number.isInteger(s.photoMax)&&s.photoMin>=1&&s.photoMin<=s.photoMax){PHOTO_MIN=s.photoMin;PHOTO_MAX=s.photoMax;}if(s.filter)activeFilter=s.filter;if(Array.isArray(s.collapsed))s.collapsed.forEach(function(i){if(typeof i==='string')collapsedCats.add(i);});}catch(e){}}
 
 // ---- photo ops ----
 // รูปทั้งชุดคือ ~40–80MB จึงถือ object URL ไว้แค่ไม่กี่ใบ แล้วโหลดที่เหลือจาก IDB เมื่อเลื่อนถึง
@@ -1361,6 +1366,18 @@ document.getElementById('opt-collapse').onclick=()=>{
 };
 document.getElementById('opt-autonext').onclick=function(){autoNext=!autoNext;this.classList.toggle('on',autoNext);saveSettings();toast(autoNext?'เปิด Auto Next':'ปิด Auto Next');};
 document.getElementById('opt-onlyphoto').onclick=function(){onlyPhotoExport=!onlyPhotoExport;this.classList.toggle('on',onlyPhotoExport);saveSettings();toast(onlyPhotoExport?'จะออกเฉพาะจุดที่มีรูป':'จะออกทุกจุด');};
+function rangeText(){return PHOTO_MIN===PHOTO_MAX?(PHOTO_MIN+' รูป'):(PHOTO_MIN+'–'+PHOTO_MAX+' รูป');}
+function syncPhotoRange(){document.getElementById('photorange-label').textContent='รูปตัวอย่างต่อหมวด: '+rangeText();}
+document.getElementById('opt-photorange').onclick=function(){
+  const v=prompt('จำนวนรูปตัวอย่างต่อหมวด\nพิมพ์เป็นช่วง เช่น 3-5 หรือตัวเลขเดียว เช่น 4',PHOTO_MIN===PHOTO_MAX?String(PHOTO_MIN):(PHOTO_MIN+'-'+PHOTO_MAX));
+  if(v===null)return;
+  const m=/^\s*(\d+)\s*(?:[-–ถึง]+\s*(\d+))?\s*$/.exec(v);
+  const a=m?+m[1]:0,b=m?(m[2]?+m[2]:a):0;
+  if(!m||a<1||b<a||b>99){toast('รูปแบบไม่ถูกต้อง — เช่น 3-5 หรือ 4');return;}
+  PHOTO_MIN=a;PHOTO_MAX=b;saveSettings();syncPhotoRange();
+  TPL.forEach((c,si)=>refreshCatHead(si));
+  toast('ตั้งรูปตัวอย่างหมวดละ '+rangeText()+' แล้ว');
+};
 document.getElementById('opt-clear').onclick=()=>{if(confirm('ล้างข้อมูลและรูปทั้งหมด?')){clearAll(false);sheet.classList.remove('show');}};
 // สำรองเป็น ZIP: รูปเก็บเป็น JPEG ดิบ (ไม่ผ่าน base64) และฝั่งกู้คืนอ่านทีละ entry ได้
 document.getElementById('opt-backup').onclick=async function(){
@@ -1894,6 +1911,7 @@ async function init(){
   syncTopbarHeight();syncSearchClear();
   document.getElementById('opt-autonext').classList.toggle('on',autoNext);
   document.getElementById('opt-onlyphoto').classList.toggle('on',onlyPhotoExport);
+  syncPhotoRange();
   setupIO();
   await openDB();
   await loadAll();
