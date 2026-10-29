@@ -71,7 +71,7 @@ cidOf(c,si) === c.cid || ('i'+si)           // id ของหมวด ใช�
 | ที่เก็บ | คีย์ | เนื้อหา |
 |---|---|---|
 | localStorage | `safetrack_ef002_meta_v2` | ผลตรวจ + หมายเหตุ (เล็ก) map จาก stable id |
-| localStorage | `safetrack_ef002_sett_v1` | ตั้งค่า UI (autoNext / onlyPhoto / filter / หมวดที่ยุบ / `sample` = stable id ของจุดที่สุ่มให้ถ่ายรูป) |
+| localStorage | `safetrack_ef002_sett_v1` | ตั้งค่า UI (autoNext / onlyPhoto / filter / หมวดที่ยุบ) |
 | localStorage | `safetrack_ef002_tmpl_v1` | รายการจุดตรวจที่ผู้ใช้แก้เอง ไม่มีคีย์นี้ = ใช้ `TEMPLATE_DATA` ในไฟล์ |
 | localStorage | `safetrack_ef002_v1` | **legacy** ก้อนรวมเก่า มีโค้ด `migrateOld()` ย้ายให้ครั้งเดียวแล้วลบทิ้ง |
 | IndexedDB | `safetrack` → store `photos` | รูป JPEG เป็น Blob คีย์ด้วย stable id |
