@@ -1786,8 +1786,9 @@ const FONT_DECL='typeface="'+RPT_FONT+'" panose="00000500000000000000" pitchFami
 async function fixThaiFontDecl(blob){
   const Z=window.JSZip;if(!Z)return blob;
   const zip=await Z.loadAsync(blob);
-  const esc=RPT_FONT.replace(/[.*+?^\${}()|[\]\\]/g,'\\$&');
-  const reLC=new RegExp('<a:(latin|cs) typeface="'+esc+'"[^>]*/>','g'),reEA=new RegExp('<a:ea typeface="'+esc+'"[^>]*/>','g');
+  // ไม่ตั้งชื่อ esc — ชนกับ esc() ที่ใช้กัน HTML ทั้งไฟล์
+  const fontRe=RPT_FONT.replace(/[.*+?^\${}()|[\]\\]/g,'\\$&');
+  const reLC=new RegExp('<a:(latin|cs) typeface="'+fontRe+'"[^>]*/>','g'),reEA=new RegExp('<a:ea typeface="'+fontRe+'"[^>]*/>','g');
   const names=Object.keys(zip.files).filter(n=>/^ppt\/(slides|slideMasters|slideLayouts)\/[^/]+\.xml$/.test(n));
   for(const n of names){
     const x=await zip.file(n).async('string');
@@ -2040,10 +2041,14 @@ document.getElementById('btn-export').onclick=async function(){
     // pptxgenjs คืน type เป็น application/zip ต้องหุ้มใหม่เป็น MIME ของ PowerPoint
     // ไม่งั้นแอปปลายทางตอนแชร์จะเห็นเป็นไฟล์ zip (หุ้ม Blob ซ้ำไม่ได้คัดลอกข้อมูล)
     let raw=await pptx.write({outputType:'blob'});
-    try{raw=await fixThaiFontDecl(raw);}catch(e){console.error('fixThaiFontDecl',e);}
+    // แก้ไม่สำเร็จยังส่งไฟล์ให้ (ดีกว่าไม่ได้อะไร) แต่ต้องบอก — ไม่งั้นผู้ใช้เอาไฟล์ภาษาไทยเพี้ยนไปนำเสนอโดยไม่รู้
+    let fontWarn='';
+    try{raw=await fixThaiFontDecl(raw);}catch(e){console.error('fixThaiFontDecl',e);fontWarn=' ⚠️ แก้ฟอนต์ไม่สำเร็จ — เครื่องที่มีฟอนต์ CPF อาจเห็นภาษาไทยเพี้ยน';}
     const blob=new Blob([raw],
       {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
-    offerFile(blob,fname,'สร้าง PowerPoint สำเร็จ ('+slides.length+' สไลด์) — เลือกส่งหรือดาวน์โหลด');
+    offerFile(blob,fname,'สร้าง PowerPoint สำเร็จ ('+slides.length+' สไลด์) — เลือกส่งหรือดาวน์โหลด'+fontWarn);
+    // toast หายเองใน 2–3 วินาที — เขียนคำเตือนลงแผงไฟล์ด้วยให้อยู่จนกว่าจะปิด
+    if(fontWarn)document.getElementById('file-info').textContent+=fontWarn;
   }catch(err){console.error(err);toast('เกิดข้อผิดพลาด: '+err.message);}
   finally{btn.disabled=false;btn.innerHTML=orig;}
 };
