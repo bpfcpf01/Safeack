@@ -334,6 +334,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
     </div>
     <div class="row" id="row-orphan" style="display:none"><button class="opt" id="opt-orphan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m2 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="orphan-label">ล้างรูปกำพร้า</span></button></div>
     <div class="row"><button class="opt danger" id="opt-clear"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m2 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>ล้างข้อมูลทั้งหมด</button></div>
+    <div class="row"><div class="opt info">เวอร์ชันแอป: <b data-app-version></b> — ถ้าไม่ตรงกับที่แจ้งไว้ ให้รีเฟรชหน้า (อาจต้องรอ ~10 นาทีหลังอัปเดต)</div></div>
     <div class="row"><div class="opt info" id="opt-storage">พื้นที่เก็บข้อมูล: กำลังตรวจสอบ…</div></div>
     <input type="file" id="restore-file" accept=".zip,.json,application/zip,application/json" style="display:none">
   </div>
@@ -610,7 +611,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Sukhumvit Set","Noto San
       </div>
     </details>
 
-    <div class="gfoot">SafeTrack · <span data-form-code>EF-SF-002</span><br>ปิดคู่มือด้วยปุ่ม ✕ มุมขวาบน</div>
+    <div class="gfoot">SafeTrack · <span data-form-code>EF-SF-002</span> · เวอร์ชัน <span data-app-version></span><br>ปิดคู่มือด้วยปุ่ม ✕ มุมขวาบน</div>
   </div>
 </div>
 
@@ -639,6 +640,10 @@ window.REPORT_FIXED = {"category": "สายกราวตู้น้ำด�
 // รหัสแบบฟอร์มที่โชว์บนหัวแอป คู่มือ และสไลด์สรุป — เปลี่ยนที่นี่ที่เดียว
 // (คนละเรื่องกับ 'ef002' ในคีย์ storage / ไฟล์สำรองด้านล่าง ซึ่งห้ามเปลี่ยน ไม่งั้นข้อมูลเดิมหาย)
 const FORM_CODE='EF-SF-002';
+// เวอร์ชันแอป — เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ (วันที่.ลำดับ) โชว์ในคู่มือ เมนู ⋯ และฝังในไฟล์ PowerPoint (docProps)
+// GitHub Pages แคชหน้าเว็บได้ถึง 10 นาที — ผู้ใช้ดูเลขนี้เพื่อยืนยันว่าได้เวอร์ชันล่าสุดแล้ว
+const APP_VERSION='2026.10.29-9';
+document.querySelectorAll('[data-app-version]').forEach(function(el){el.textContent=APP_VERSION;});
 document.querySelectorAll('[data-form-code]').forEach(function(el){el.textContent=FORM_CODE;});
 const META_KEY='safetrack_ef002_meta_v2'; // small metadata only (result/note)
 const OLD_KEY='safetrack_ef002_v1';        // legacy combined blob (state+photos) — migrated away
@@ -1792,12 +1797,18 @@ async function fixThaiFontDecl(blob){
   const fontRe=RPT_FONT.replace(/[.*+?^\${}()|[\]\\]/g,'\\$&');
   const reLC=new RegExp('<a:(latin|cs) typeface="'+fontRe+'"[^>]*/>','g'),reEA=new RegExp('<a:ea typeface="'+fontRe+'"[^>]*/>','g');
   const names=Object.keys(zip.files).filter(n=>/^ppt\/(slides|slideMasters|slideLayouts)\/[^/]+\.xml$/.test(n));
+  let nFont=0,nLang=0,nLeft=0;
   for(const n of names){
     const x=await zip.file(n).async('string');
-    const y=x.replace(reLC,function(m,t){return '<a:'+t+' '+FONT_DECL+'/>';}).replace(reEA,'<a:ea typeface="+mn-ea"/>')
-      .replace(/<a:(rPr|endParaRPr|defRPr) lang="en-US"(?! altLang)/g,'<a:$1 lang="th-TH" altLang="en-US"');
+    const y=x.replace(reLC,function(m,t){nFont++;return '<a:'+t+' '+FONT_DECL+'/>';}).replace(reEA,'<a:ea typeface="+mn-ea"/>')
+      .replace(/<a:(rPr|endParaRPr|defRPr) lang="en-US"(?! altLang)/g,function(m,t){nLang++;return '<a:'+t+' lang="th-TH" altLang="en-US"';});
     if(y!==x)zip.file(n,y);
+    // ตรวจผลจริงในสไลด์: ต้องไม่เหลือข้อความที่ไม่ได้ประกาศเป็นภาษาไทย (นับแค่ว่าแก้ไปกี่จุดไม่พอ)
+    if(/^ppt\/slides\//.test(n))nLeft+=(y.match(/<a:(?:rPr|endParaRPr) lang="(?!th-TH")/g)||[]).length;
   }
+  // นับไว้ — ถ้าอัปเกรด pptxgenjs แล้วรูปแบบ XML เปลี่ยน regex จะไม่จับอะไรเลยแบบเงียบ ๆ ให้ถือว่าล้ม
+  console.info('fixThaiFontDecl: font',nFont,'lang',nLang,'left',nLeft);
+  if(!nFont||!nLang||nLeft)throw new Error('แก้ฟอนต์/ภาษาไม่ครบ (font '+nFont+', lang '+nLang+', เหลือ '+nLeft+')');
   return zip.generateAsync({type:'blob',compression:'DEFLATE'});
 }
 function clip(t,n){t=String(t);return t.length>n?t.slice(0,n-1)+'…':t;}
@@ -1872,6 +1883,7 @@ document.getElementById('btn-export').onclick=async function(){
     const pptx=new PGJS();
     pptx.defineLayout({name:'W',width:13.333,height:7.5});
     pptx.layout='W';
+    pptx.company='SafeTrack '+APP_VERSION;   // ดูได้ที่ File → Info ใน PowerPoint — บอกว่าไฟล์มาจากเวอร์ชันไหน
     const BG=window.REPORT_BG||{};
     // ใช้ master แทน slide.background — สไลด์ที่ตารางสรุปแตกเพิ่มเอง (autoPage) จะได้พื้นหลังเดียวกัน
     pptx.defineSlideMaster({title:'RPT_TITLE',background:BG.title?{data:BG.title}:{color:'49C5B1'}});
