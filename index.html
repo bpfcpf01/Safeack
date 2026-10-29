@@ -1779,6 +1779,23 @@ const RPT_FONT='CPF Imm Sook';   // ฟอนต์ของแม่แบบ �
 // ไม่ใช้ fit:'shrink' — PowerPoint ไม่ย่อจนกว่าจะแก้กล่อง ส่วนโปรแกรมอื่นย่อเกินจริง เลือกขนาดตามความยาวแทน
 function fitSize(t,base){const n=String(t).length;return n>60?base-5:n>40?base-4:n>24?base-2:base;}
 // แถบสถานะบนการ์ดสูงแค่ 2 บรรทัด — หมายเหตุยาวตัดท้าย (ข้อความเต็มอยู่ในตารางสรุป)
+// pptxgenjs ประกาศฟอนต์ด้วย charset ของละติน/เกาหลี/จีน — CPF Imm Sook เป็นฟอนต์ไทยแบบเก่าที่พึ่ง charset
+// เครื่องที่ติดตั้งฟอนต์นี้จึงแปลงข้อความไทยผ่าน code page ผิดจนกลายเป็น "√"¬-"∫…" ทั้งไฟล์ (เจอจริงแล้ว)
+// แก้ XML หลังสร้างให้ประกาศแบบเดียวกับแม่แบบของผู้ใช้: latin/cs = charset -34 (Thai), ea = ฟอนต์ธีม
+const FONT_DECL='typeface="'+RPT_FONT+'" panose="00000500000000000000" pitchFamily="2" charset="-34"';
+async function fixThaiFontDecl(blob){
+  const Z=window.JSZip;if(!Z)return blob;
+  const zip=await Z.loadAsync(blob);
+  const esc=RPT_FONT.replace(/[.*+?^\${}()|[\]\\]/g,'\\$&');
+  const reLC=new RegExp('<a:(latin|cs) typeface="'+esc+'"[^>]*/>','g'),reEA=new RegExp('<a:ea typeface="'+esc+'"[^>]*/>','g');
+  const names=Object.keys(zip.files).filter(n=>/^ppt\/(slides|slideMasters|slideLayouts)\/[^/]+\.xml$/.test(n));
+  for(const n of names){
+    const x=await zip.file(n).async('string');
+    const y=x.replace(reLC,function(m,t){return '<a:'+t+' '+FONT_DECL+'/>';}).replace(reEA,'<a:ea typeface="+mn-ea"/>');
+    if(y!==x)zip.file(n,y);
+  }
+  return zip.generateAsync({type:'blob',compression:'DEFLATE'});
+}
 function clip(t,n){t=String(t);return t.length>n?t.slice(0,n-1)+'…':t;}
 const RPT={teal:'66BFB1',mint:'CCEAE5',mint2:'DBF0EC',photoBg:'EDEDED',fail:'D9534F',pend:'9AA5A3'};
 const TH_MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -2022,7 +2039,9 @@ document.getElementById('btn-export').onclick=async function(){
     // เอา Blob มาเองแทน writeFile() ซึ่งยิง <a download> ให้ข้างใน — จะได้คุมการส่งไฟล์เอง
     // pptxgenjs คืน type เป็น application/zip ต้องหุ้มใหม่เป็น MIME ของ PowerPoint
     // ไม่งั้นแอปปลายทางตอนแชร์จะเห็นเป็นไฟล์ zip (หุ้ม Blob ซ้ำไม่ได้คัดลอกข้อมูล)
-    const blob=new Blob([await pptx.write({outputType:'blob'})],
+    let raw=await pptx.write({outputType:'blob'});
+    try{raw=await fixThaiFontDecl(raw);}catch(e){console.error('fixThaiFontDecl',e);}
+    const blob=new Blob([raw],
       {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
     offerFile(blob,fname,'สร้าง PowerPoint สำเร็จ ('+slides.length+' สไลด์) — เลือกส่งหรือดาวน์โหลด');
   }catch(err){console.error(err);toast('เกิดข้อผิดพลาด: '+err.message);}
